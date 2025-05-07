@@ -1,0 +1,39 @@
+{
+    "product_images": {
+        "main": "https://reimaginedhealth.com/wp-content/uploads/2024/01/gut-repair-plus-main.jpg",
+        "ingredients": "https://reimaginedhealth.com/wp-content/uploads/2024/01/gut-repair-ingredients.jpg",
+        "usage": "https://reimaginedhealth.com/wp-content/uploads/2024/01/gut-repair-usage.jpg",
+        "results": "https://reimaginedhealth.com/wp-content/uploads/2024/01/gut-repair-results.jpg"
+    },
+    "social_media": {
+        "instagram": "https://instagram.com/reimaginedhealth",
+        "facebook": "https://facebook.com/reimaginedhealth",
+        "twitter": "https://twitter.com/reimaginedhealth",
+        "youtube": "https://youtube.com/reimaginedhealth"
+    },
+    "marketing_assets": {
+        "logo": "https://reimaginedhealth.com/wp-content/uploads/2024/01/reimagined-health-logo.png",
+        "banner": "https://reimaginedhealth.com/wp-content/uploads/2024/01/gut-repair-banner.jpg",
+        "product_shot": "https://reimaginedhealth.com/wp-content/uploads/2024/01/gut-repair-product.jpg"
+    },
+    "icons": {
+        "check": "✓",
+        "warning": "⚠",
+        "info": "ℹ",
+        "star": "★"
+    },
+    "colors": {
+        "primary": "#4A90E2",
+        "secondary": "#2C3E50",
+        "accent": "#27AE60",
+        "warning": "#E67E22",
+        "background": "#F5F7FA",
+        "text": "#2C3E50",
+        "light": "#ECF0F1",
+        "dark": "#2C3E50"
+    },
+    "fonts": {
+        "primary": "Montserrat",
+        "secondary": "Open Sans"
+    }
+} 
