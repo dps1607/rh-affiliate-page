@@ -1,7 +1,8 @@
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+import http.server
+import socketserver
 import os
 
-class CORSRequestHandler(SimpleHTTPRequestHandler):
+class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET')
@@ -14,10 +15,14 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
             self.path = '/template.html'
         return super().do_GET()
 
-def run(server_class=HTTPServer, handler_class=CORSRequestHandler, port=8000):
-    server_address = ('', port)
+PORT = 8001
+
+def run():
+    handler_class = http.server.SimpleHTTPRequestHandler
+    server_class = socketserver.TCPServer
+    server_address = ('', PORT)
     httpd = server_class(server_address, handler_class)
-    print(f"Starting server at http://localhost:{port}")
+    print(f"Starting server at http://localhost:{PORT}")
     httpd.serve_forever()
 
 if __name__ == '__main__':

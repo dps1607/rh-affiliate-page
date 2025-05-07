@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  command = "python3 server.py"
+  command = ""
 
 [[redirects]]
   from = "/*"
