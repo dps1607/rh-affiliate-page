@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const { google } = require('googleapis');
 const axios = require('axios');
 
 const app = express();
@@ -28,18 +27,6 @@ app.use('/api/sheets/submit', limiter);
 const LEADDYNO_API_KEY = process.env.LEADDYNO_API_KEY;
 const LEADDYNO_BASE_URL = 'https://api.leaddyno.com/v1';
 
-// Google Sheets configuration
-const GOOGLE_SHEETS_CREDENTIALS = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS || '{}');
-const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID;
-
-// Initialize Google Sheets API
-const auth = new google.auth.GoogleAuth({
-  credentials: GOOGLE_SHEETS_CREDENTIALS,
-  scopes: ['https://www.googleapis.com/auth/spreadsheets']
-});
-
-const sheets = google.sheets({ version: 'v4', auth });
-
 /**
  * Health check endpoint
  */
@@ -49,8 +36,7 @@ app.get('/api/health', (req, res) => {
     message: 'GASP Affiliate API is running',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    leadDynoStatus: LEADDYNO_API_KEY ? 'Configured' : 'Not Configured',
-    googleSheetsStatus: GOOGLE_SHEET_ID ? 'Configured' : 'Not Configured'
+    leadDynoStatus: LEADDYNO_API_KEY ? 'Configured' : 'Not Configured'
   });
 });
 
@@ -64,9 +50,7 @@ app.post('/api/leaddyno/submit', async (req, res) => {
       firstName,
       lastName,
       phone,
-      customFields,
-      tags,
-      source
+      customFields
     } = req.body;
 
     // Validate required fields
@@ -77,7 +61,7 @@ app.post('/api/leaddyno/submit', async (req, res) => {
       });
     }
 
-    // Prepare LeadDyno payload using actual API structure
+    // Prepare LeadDyno payload
     const leadDynoPayload = {
       email,
       first_name: firstName,
@@ -94,11 +78,11 @@ app.post('/api/leaddyno/submit', async (req, res) => {
         status: 'pending_approval'
       },
       affiliate_code: `APP-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
-      override_approval: false, // Require manual approval
+      override_approval: false,
       unsubscribed: false
     };
 
-    // Submit to LeadDyno API using the correct endpoint
+    // Submit to LeadDyno API
     const leadDynoResponse = await axios.post(
       `${LEADDYNO_BASE_URL}/affiliates`,
       leadDynoPayload,
@@ -125,7 +109,6 @@ app.post('/api/leaddyno/submit', async (req, res) => {
   } catch (error) {
     console.error('LeadDyno submission error:', error.response?.data || error.message);
     
-    // Don't fail the entire submission if LeadDyno fails
     res.json({
       success: false,
       error: 'Failed to submit to LeadDyno, but application was recorded',
@@ -144,18 +127,7 @@ app.post('/api/sheets/submit', async (req, res) => {
       applicationId,
       firstName,
       lastName,
-      email,
-      phone,
-      primaryPlatform,
-      platformHandle,
-      followerCount,
-      audienceType,
-      engagementRate,
-      affiliateExperience,
-      motivation,
-      promotionPlan,
-      audienceDescription,
-      additionalPlatforms
+      email
     } = req.body;
 
     // Validate required fields
@@ -166,7 +138,7 @@ app.post('/api/sheets/submit', async (req, res) => {
       });
     }
 
-    // For now, just return success (Google Sheets integration will be added later)
+    // For now, just return success
     res.json({
       success: true,
       message: 'Application submitted successfully (Google Sheets integration pending)',
