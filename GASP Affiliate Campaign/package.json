@@ -2,10 +2,10 @@
   "name": "gasp-affiliate-campaign",
   "version": "1.0.0",
   "description": "GASP Affiliate Campaign with LeadDyno integration",
-  "main": "integrations/leaddyno-integration/backend-api.js",
+  "main": "api.js",
   "scripts": {
-    "start": "node integrations/leaddyno-integration/backend-api.js",
-    "dev": "nodemon integrations/leaddyno-integration/backend-api.js"
+    "start": "node api.js",
+    "dev": "nodemon api.js"
   },
   "keywords": [
     "affiliate",
