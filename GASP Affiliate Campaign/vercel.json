@@ -1,8 +1,28 @@
 {
   "version": 2,
   "functions": {
+    "api/hello.js": {
+      "maxDuration": 30
+    },
+    "api/test.js": {
+      "maxDuration": 30
+    },
     "api/index.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "routes": [
+    {
+      "src": "/api/hello",
+      "dest": "/api/hello.js"
+    },
+    {
+      "src": "/api/test",
+      "dest": "/api/test.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    }
+  ]
 }

@@ -156,5 +156,8 @@ app.post('/api/sheets/submit', async (req, res) => {
   }
 });
 
-// Export for Vercel
+// Export for Vercel - try both formats
 module.exports = app;
+
+// Also try ES6 export for Vercel
+export default app;
