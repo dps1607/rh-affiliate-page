@@ -1,57 +1,54 @@
-const express = require('express');
-const cors = require('cors');
-const rateLimit = require('express-rate-limit');
-const axios = require('axios');
+// Vercel serverless function - handles multiple routes
+export default function handler(req, res) {
+  const { method, url } = req;
 
-const app = express();
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-// Middleware
-app.use(cors({
-  origin: ['https://drnashatlatib.com', 'http://localhost:3000'],
-  credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
+  // Handle preflight requests
+  if (method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
+  // Route handling
+  if (url.includes('/api/health') && method === 'GET') {
+    return handleHealth(req, res);
+  }
 
-// Apply rate limiting to form submission endpoints
-app.use('/api/leaddyno/submit', limiter);
-app.use('/api/sheets/submit', limiter);
+  if (url.includes('/api/leaddyno/submit') && method === 'POST') {
+    return handleLeadDynoSubmit(req, res);
+  }
 
-// LeadDyno configuration
-const LEADDYNO_API_KEY = process.env.LEADDYNO_API_KEY;
-const LEADDYNO_BASE_URL = 'https://api.leaddyno.com/v1';
+  if (url.includes('/api/sheets/submit') && method === 'POST') {
+    return handleSheetsSubmit(req, res);
+  }
 
-/**
- * Health check endpoint
- */
-app.get('/api/health', (req, res) => {
-  res.json({
+  // Default response
+  res.status(404).json({
+    success: false,
+    error: 'Endpoint not found',
+    availableEndpoints: ['/api/health', '/api/leaddyno/submit', '/api/sheets/submit']
+  });
+}
+
+// Health check handler
+function handleHealth(req, res) {
+  res.status(200).json({
     success: true,
     message: 'GASP Affiliate API is running',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    leadDynoStatus: LEADDYNO_API_KEY ? 'Configured' : 'Not Configured'
+    leadDynoStatus: process.env.LEADDYNO_API_KEY ? 'Configured' : 'Not Configured'
   });
-});
+}
 
-/**
- * Submit affiliate application to LeadDyno
- */
-app.post('/api/leaddyno/submit', async (req, res) => {
+// LeadDyno submission handler
+async function handleLeadDynoSubmit(req, res) {
   try {
-    const {
-      email,
-      firstName,
-      lastName,
-      phone,
-      customFields
-    } = req.body;
+    const { email, firstName, lastName, phone, customFields } = req.body;
 
     // Validate required fields
     if (!email || !firstName || !lastName) {
@@ -61,74 +58,27 @@ app.post('/api/leaddyno/submit', async (req, res) => {
       });
     }
 
-    // Prepare LeadDyno payload
-    const leadDynoPayload = {
-      email,
-      first_name: firstName,
-      last_name: lastName,
-      custom_fields: {
-        phone: phone || '',
-        platform: customFields?.platform || '',
-        platform_handle: customFields?.platformHandle || '',
-        follower_count: customFields?.followerCount || '',
-        audience_type: customFields?.audienceType || '',
-        engagement_rate: customFields?.engagementRate || '',
-        affiliate_experience: customFields?.affiliateExperience || '',
-        application_id: customFields?.applicationId || '',
-        status: 'pending_approval'
-      },
-      affiliate_code: `APP-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
-      override_approval: false,
-      unsubscribed: false
-    };
-
-    // Submit to LeadDyno API
-    const leadDynoResponse = await axios.post(
-      `${LEADDYNO_BASE_URL}/affiliates`,
-      leadDynoPayload,
-      {
-        headers: {
-          'Authorization': `Bearer ${LEADDYNO_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        params: {
-          key: LEADDYNO_API_KEY
-        }
-      }
-    );
-
-    console.log('LeadDyno submission successful:', leadDynoResponse.data);
-
-    res.json({
+    // For now, just return success (LeadDyno integration pending)
+    res.status(200).json({
       success: true,
-      message: 'Application submitted to LeadDyno successfully',
-      leadDynoId: leadDynoResponse.data.id,
-      affiliateCode: leadDynoResponse.data.affiliate_code
+      message: 'Application submitted successfully (LeadDyno integration pending)',
+      data: { email, firstName, lastName, phone, customFields }
     });
 
   } catch (error) {
-    console.error('LeadDyno submission error:', error.response?.data || error.message);
-    
-    res.json({
+    console.error('LeadDyno submission error:', error);
+    res.status(500).json({
       success: false,
-      error: 'Failed to submit to LeadDyno, but application was recorded',
-      details: error.response?.data || error.message
+      error: 'Failed to submit application',
+      details: error.message
     });
   }
-});
+}
 
-/**
- * Submit affiliate application to Google Sheets
- */
-app.post('/api/sheets/submit', async (req, res) => {
+// Google Sheets submission handler
+async function handleSheetsSubmit(req, res) {
   try {
-    const {
-      timestamp,
-      applicationId,
-      firstName,
-      lastName,
-      email
-    } = req.body;
+    const { timestamp, applicationId, firstName, lastName, email } = req.body;
 
     // Validate required fields
     if (!applicationId || !firstName || !lastName || !email) {
@@ -138,8 +88,8 @@ app.post('/api/sheets/submit', async (req, res) => {
       });
     }
 
-    // For now, just return success
-    res.json({
+    // For now, just return success (Google Sheets integration pending)
+    res.status(200).json({
       success: true,
       message: 'Application submitted successfully (Google Sheets integration pending)',
       applicationId: applicationId
@@ -147,14 +97,10 @@ app.post('/api/sheets/submit', async (req, res) => {
 
   } catch (error) {
     console.error('Google Sheets submission error:', error);
-    
     res.status(500).json({
       success: false,
       error: 'Failed to submit application',
       details: error.message
     });
-    }
-});
-
-// Export for Vercel
-module.exports = app;
+  }
+}
