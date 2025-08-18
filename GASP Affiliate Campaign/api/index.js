@@ -153,7 +153,7 @@ app.post('/api/sheets/submit', async (req, res) => {
       error: 'Failed to submit application',
       details: error.message
     });
-  }
+    }
 });
 
 // Export for Vercel
