@@ -1,0 +1,159 @@
+{
+  "name": "GASP Weekly Payout Automation",
+  "flow": {
+    "modules": [
+      {
+        "id": "scheduler_trigger",
+        "name": "Weekly Payout Trigger",
+        "type": "scheduler",
+        "config": {
+          "cron": "0 9 * * 2",
+          "timezone": "America/New_York"
+        }
+      },
+      {
+        "id": "airtable_get_payout_data",
+        "name": "Get Weekly Payout Data",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "search",
+          "filter": "Status = 'Active' AND Total Commissions >= 50"
+        }
+      },
+      {
+        "id": "calculate_payouts",
+        "name": "Calculate Weekly Payouts",
+        "type": "code",
+        "config": {
+          "code": "// Calculate weekly payouts for each partner\nconst payouts = [];\nconst payoutSummary = {\n  totalPayouts: 0,\n  totalPartners: 0,\n  payouts: []\n};\n\nfor (const partner of airtable_get_payout_data) {\n  const weeklyCommissions = partner['Weekly Commissions'] || 0;\n  const totalCommissions = partner['Total Commissions'] || 0;\n  const pendingCommissions = partner['Pending Commissions'] || 0;\n  \n  // Only pay if they meet minimum threshold\n  if (totalCommissions >= 50) {\n    const payoutAmount = Math.min(totalCommissions, weeklyCommissions + pendingCommissions);\n    \n    if (payoutAmount > 0) {\n      const payout = {\n        partnerId: partner.id,\n        partnerName: partner['First Name'] + ' ' + partner['Last Name'],\n        partnerEmail: partner['Email'],\n        payoutAmount: payoutAmount,\n        commissionBreakdown: {\n          weekly: weeklyCommissions,\n          pending: pendingCommissions,\n          total: totalCommissions\n        },\n        paymentMethod: partner['Payment Method'] || 'PayPal',\n        paymentDetails: partner['Payment Details'] || partner['Email']\n      };\n      \n      payouts.push(payout);\n      payoutSummary.totalPayouts += payoutAmount;\n      payoutSummary.totalPartners += 1;\n      payoutSummary.payouts.push(payout);\n    }\n  }\n}\n\nreturn { payouts, payoutSummary };"
+        }
+      },
+      {
+        "id": "create_paypal_payouts",
+        "name": "Create PayPal Payouts",
+        "type": "http",
+        "config": {
+          "url": "https://api-m.paypal.com/v1/payments/payouts",
+          "method": "POST",
+          "headers": {
+            "Authorization": "Bearer {{paypal_access_token}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "sender_batch_header": {
+              "sender_batch_id": "GASP_PAYOUT_{{scheduler_trigger.date}}",
+              "email_subject": "Your GASP Affiliate Commission Payment",
+              "email_message": "You have received your weekly affiliate commission payment from Dr. Nashat Latib's GASP program."
+            },
+            "items": "{{calculate_payouts.payouts.map(payout => ({\n              recipient_type: 'EMAIL',\n              amount: {\n                value: payout.payoutAmount.toFixed(2),\n                currency: 'USD'\n              },\n              receiver: payout.paymentDetails,\n              note: `GASP Affiliate Commission - ${payout.partnerName}`,\n              sender_item_id: payout.partnerId\n            }))}}"
+          }
+        }
+      },
+      {
+        "id": "update_payout_history",
+        "name": "Update Payout History",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Payout History",
+          "action": "create",
+          "records": "{{calculate_payouts.payouts.map(payout => ({\n            fields: {\n              'Partner': [payout.partnerId],\n              'Payout Amount': payout.payoutAmount,\n              'Payout Date': '{{scheduler_trigger.date}}',\n              'Payment Method': payout.paymentMethod,\n              'Status': 'Processing',\n              'PayPal Batch ID': '{{create_paypal_payouts.batch_header.payout_batch_id}}',\n              'Commission Breakdown': JSON.stringify(payout.commissionBreakdown)\n            }\n          }))}}"
+        }
+      },
+      {
+        "id": "reset_weekly_commissions",
+        "name": "Reset Weekly Commission Counters",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "update",
+          "records": "{{calculate_payouts.payouts.map(payout => ({\n            id: payout.partnerId,\n            fields: {\n              'Weekly Commissions': 0,\n              'Pending Commissions': 0,\n              'Last Payout Date': '{{scheduler_trigger.date}}',\n              'Last Payout Amount': payout.payoutAmount\n            }\n          }))}}"
+        }
+      },
+      {
+        "id": "send_payout_confirmation",
+        "name": "Send Payout Confirmation Emails",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/emails",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": "{{calculate_payouts.payouts.map(payout => ({\n            email: {\n              email: payout.partnerEmail,\n              subject: `💰 Your GASP Commission Payment: $${payout.payoutAmount.toFixed(2)}`, \n              htmlBody": `{{payout_confirmation_template.replace('{{partnerName}}', payout.partnerName).replace('{{payoutAmount}}', payout.payoutAmount.toFixed(2)).replace('{{payoutDate}}', scheduler_trigger.date)}}`,\n              from: 'affiliates@drnashatlatib.com'\n            }\n          }))}}"
+        }
+      },
+      {
+        "id": "send_admin_summary",
+        "name": "Send Admin Payout Summary",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/emails",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "email": {
+              "email": "{{admin_email}}",
+              "subject": "📊 GASP Weekly Payout Summary - {{scheduler_trigger.date}}",
+              "htmlBody": "{{admin_summary_template.replace('{{payoutSummary}}', JSON.stringify(calculate_payouts.payoutSummary, null, 2)).replace('{{paypalBatchId}}', create_paypal_payouts.batch_header.payout_batch_id)}}",
+              "from": "reports@drnashatlatib.com"
+            }
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": "scheduler_trigger",
+        "to": "airtable_get_payout_data"
+      },
+      {
+        "from": "airtable_get_payout_data",
+        "to": "calculate_payouts"
+      },
+      {
+        "from": "calculate_payouts",
+        "to": "create_paypal_payouts"
+      },
+      {
+        "from": "create_paypal_payouts",
+        "to": "update_payout_history"
+      },
+      {
+        "from": "create_paypal_payouts",
+        "to": "reset_weekly_commissions"
+      },
+      {
+        "from": "update_payout_history",
+        "to": "send_payout_confirmation"
+      },
+      {
+        "from": "calculate_payouts",
+        "to": "send_admin_summary"
+      },
+      {
+        "from": "create_paypal_payouts",
+        "to": "send_admin_summary"
+      }
+    ]
+  },
+  "variables": {
+    "airtable_base_id": "{{airtable_base_id}}",
+    "ac_account": "{{activecampaign_account}}",
+    "ac_api_key": "{{activecampaign_api_key}}",
+    "admin_email": "{{admin_email}}",
+    "paypal_access_token": "{{paypal_access_token}}",
+    "payout_confirmation_template": "{{payout_confirmation_email_html}}",
+    "admin_summary_template": "{{admin_summary_email_html}}"
+  }
+}
+
+
+

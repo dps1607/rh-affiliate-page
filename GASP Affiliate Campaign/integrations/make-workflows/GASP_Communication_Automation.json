@@ -1,0 +1,145 @@
+{
+  "name": "GASP Communication Automation",
+  "flow": {
+    "modules": [
+      {
+        "id": "scheduler_trigger",
+        "name": "Communication Scheduler",
+        "type": "scheduler",
+        "config": {
+          "cron": "0 9 * * *",
+          "timezone": "America/New_York"
+        }
+      },
+      {
+        "id": "airtable_get_partners",
+        "name": "Get Partners for Communication",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "search",
+          "filter": "Status = 'Active'"
+        }
+      },
+      {
+        "id": "check_milestones",
+        "name": "Check Partner Milestones",
+        "type": "code",
+        "config": {
+          "code": "// Check for various communication triggers\nconst communicationTriggers = [];\n\nfor (const partner of airtable_get_partners) {\n  const triggers = [];\n  \n  // Check for first registration milestone\n  if (partner['Total Registrations'] === 1) {\n    triggers.push('first_registration');\n  }\n  \n  // Check for 10 registration milestone\n  if (partner['Total Registrations'] === 10) {\n    triggers.push('ten_registrations');\n  }\n  \n  // Check for 50 registration milestone\n  if (partner['Total Registrations'] === 50) {\n    triggers.push('fifty_registrations');\n  }\n  \n  // Check for 150 registration milestone\n  if (partner['Total Registrations'] === 150) {\n    triggers.push('hundred_fifty_registrations');\n  }\n  \n  // Check for first conversion milestone\n  if (partner['Total Conversions'] === 1) {\n    triggers.push('first_conversion');\n  }\n  \n  // Check for tier upgrade\n  if (partner['Quality Tier'] !== partner['Previous Quality Tier']) {\n    triggers.push('tier_upgrade');\n  }\n  \n  // Check for inactivity (7+ days)\n  const lastActivity = new Date(partner['Last Activity']);\n  const daysSinceActivity = Math.floor((Date.now() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));\n  if (daysSinceActivity >= 7) {\n    triggers.push('inactivity_reminder');\n  }\n  \n  // Check for low performance\n  if (partner['Daily Conversion Rate'] < 9 && partner['Total Registrations'] >= 20) {\n    triggers.push('performance_improvement');\n  }\n  \n  if (triggers.length > 0) {\n    communicationTriggers.push({\n      partnerId: partner.id,\n      partnerEmail: partner['Email'],\n      partnerName: partner['First Name'] + ' ' + partner['Last Name'],\n      triggers: triggers,\n      currentTier: partner['Quality Tier'],\n      totalRegistrations: partner['Total Registrations'],\n      totalConversions: partner['Total Conversions']\n    });\n  }\n}\n\nreturn { communicationTriggers };"
+        }
+      },
+      {
+        "id": "send_milestone_emails",
+        "name": "Send Milestone Emails",
+        "type": "code",
+        "config": {
+          "code": "// Prepare milestone emails\nconst emailsToSend = [];\n\nfor (const trigger of check_milestones.communicationTriggers) {\n  for (const triggerType of trigger.triggers) {\n    let emailData;\n    \n    switch (triggerType) {\n      case 'first_registration':\n        emailData = {\n          to: trigger.partnerEmail,\n          subject: '🎉 Your First Registration! Welcome to the GASP Family',\n          template: 'first_registration_template',\n          variables: {\n            partnerName: trigger.partnerName,\n            registrationCount: trigger.totalRegistrations\n          }\n        };\n        break;\n        \n      case 'ten_registrations':\n        emailData = {\n          to: trigger.partnerEmail,\n          subject: '🚀 10 Registrations! You\'re Building Momentum',\n          template: 'ten_registrations_template',\n          variables: {\n            partnerName: trigger.partnerName,\n            registrationCount: trigger.totalRegistrations\n          }\n        };\n        break;\n        \n      case 'fifty_registrations':\n        emailData = {\n          to: trigger.partnerEmail,\n          subject: '🔥 50 Registrations! You\'re a GASP Powerhouse',\n          template: 'fifty_registrations_template',\n          variables: {\n            partnerName: trigger.partnerName,\n            registrationCount: trigger.totalRegistrations\n          }\n        };\n        break;\n        \n      case 'hundred_fifty_registrations':\n        emailData = {\n          to: trigger.partnerEmail,\n          subject: '🏆 150+ Registrations! You\'ve Reached Elite Status',\n          template: 'hundred_fifty_registrations_template',\n          variables: {\n            partnerName: trigger.partnerName,\n            registrationCount: trigger.totalRegistrations\n          }\n        };\n        break;\n        \n      case 'first_conversion':\n        emailData = {\n          to: trigger.partnerEmail,\n          subject: '💰 Your First Sale! Commission Coming Your Way',\n          template: 'first_conversion_template',\n          variables: {\n            partnerName: trigger.partnerName,\n            conversionCount: trigger.totalConversions\n          }\n        };\n        break;\n        \n      case 'tier_upgrade':\n        emailData = {\n          to: trigger.partnerEmail,\n          subject: '⭐ Tier Upgrade! Your Earnings Just Increased',\n          template: 'tier_upgrade_template',\n          variables: {\n            partnerName: trigger.partnerName,\n            newTier: trigger.currentTier\n          }\n        };\n        break;\n        \n      case 'inactivity_reminder':\n        emailData = {\n          to: trigger.partnerEmail,\n          subject: '💡 Ready to Get Back in the Game?',\n          template: 'inactivity_reminder_template',\n          variables: {\n            partnerName: trigger.partnerName,\n            daysInactive: 7\n          }\n        };\n        break;\n        \n      case 'performance_improvement':\n        emailData = {\n          to: trigger.partnerEmail,\n          subject: '📈 Let\'s Boost Your Conversion Rate Together',\n          template: 'performance_improvement_template',\n          variables: {\n            partnerName: trigger.partnerName,\n            currentRate: '{{trigger.dailyConversionRate}}%'\n          }\n        };\n        break;\n    }\n    \n    if (emailData) {\n      emailsToSend.push(emailData);\n    }\n  }\n}\n\nreturn { emailsToSend };"
+        }
+      },
+      {
+        "id": "send_emails_via_activecampaign",
+        "name": "Send Emails via ActiveCampaign",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/emails",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": "{{send_milestone_emails.emailsToSend.map(email => ({\n  email: {\n    email: email.to,\n    subject: email.subject,\n    htmlBody: email.template.replace('{{partnerName}}', email.variables.partnerName).replace('{{registrationCount}}', email.variables.registrationCount || '').replace('{{conversionCount}}', email.variables.conversionCount || '').replace('{{newTier}}', email.variables.newTier || '').replace('{{daysInactive}}', email.variables.daysInactive || '').replace('{{currentRate}}', email.variables.currentRate || ''),\n    from: 'affiliates@drnashatlatib.com'\n  }\n}))}}"
+        }
+      },
+      {
+        "id": "update_communication_history",
+        "name": "Update Communication History",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Communication History",
+          "action": "create",
+          "records": "{{send_milestone_emails.emailsToSend.map(email => ({\n  fields: {\n    'Partner': [check_milestones.communicationTriggers.find(t => t.partnerEmail === email.to).partnerId],\n    'Email Type': email.template,\n    'Subject': email.subject,\n    'Sent Date': '{{scheduler_trigger.date}}',\n    'Status': 'Sent'\n  }\n}))}}"
+        }
+      },
+      {
+        "id": "send_weekly_newsletter",
+        "name": "Send Weekly Newsletter",
+        "type": "code",
+        "config": {
+          "code": "// Check if it's Tuesday (weekly newsletter day)\nconst today = new Date();\nconst isTuesday = today.getDay() === 2;\n\nif (isTuesday) {\n  // Get top performers for the week\n  const topPerformers = airtable_get_partners\n    .sort((a, b) => (b['Weekly Registrations'] || 0) - (a['Weekly Registrations'] || 0))\n    .slice(0, 3);\n  \n  // Get weekly stats\n  const weeklyStats = {\n    totalRegistrations: airtable_get_partners.reduce((sum, p) => sum + (p['Weekly Registrations'] || 0), 0),\n    totalConversions: airtable_get_partners.reduce((sum, p) => sum + (p['Weekly Conversions'] || 0), 0),\n    totalRevenue: airtable_get_partners.reduce((sum, p) => sum + (p['Weekly Revenue'] || 0), 0),\n    topPerformers: topPerformers.map(p => p['First Name'] + ' ' + p['Last Name'])\n  };\n  \n  return { shouldSendNewsletter: true, weeklyStats, topPerformers };\n} else {\n  return { shouldSendNewsletter: false };\n}"
+        }
+      },
+      {
+        "id": "send_newsletter_email",
+        "name": "Send Newsletter to All Partners",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/emails",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "email": {
+              "email": "{{newsletter_recipients}}",
+              "subject": "📊 GASP Weekly Newsletter - {{scheduler_trigger.date}}",
+              "htmlBody": "{{weekly_newsletter_template.replace('{{weeklyStats}}', JSON.stringify(send_weekly_newsletter.weeklyStats, null, 2)).replace('{{topPerformers}}', send_weekly_newsletter.topPerformers.join(', '))}}",
+              "from": "affiliates@drnashatlatib.com"
+            }
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": "scheduler_trigger",
+        "to": "airtable_get_partners"
+      },
+      {
+        "from": "airtable_get_partners",
+        "to": "check_milestones"
+      },
+      {
+        "from": "check_milestones",
+        "to": "send_milestone_emails"
+      },
+      {
+        "from": "send_milestone_emails",
+        "to": "send_emails_via_activecampaign"
+      },
+      {
+        "from": "send_milestone_emails",
+        "to": "update_communication_history"
+      },
+      {
+        "from": "airtable_get_partners",
+        "to": "send_weekly_newsletter"
+      },
+      {
+        "from": "send_weekly_newsletter",
+        "to": "send_newsletter_email"
+      }
+    ]
+  },
+  "variables": {
+    "airtable_base_id": "{{airtable_base_id}}",
+    "ac_account": "{{activecampaign_account}}",
+    "ac_api_key": "{{activecampaign_api_key}}",
+    "newsletter_recipients": "{{newsletter_recipients_list}}",
+    "first_registration_template": "{{first_registration_email_html}}",
+    "ten_registrations_template": "{{ten_registrations_email_html}}",
+    "fifty_registrations_template": "{{fifty_registrations_email_html}}",
+    "hundred_fifty_registrations_template": "{{hundred_fifty_registrations_email_html}}",
+    "first_conversion_template": "{{first_conversion_email_html}}",
+    "tier_upgrade_template": "{{tier_upgrade_email_html}}",
+    "inactivity_reminder_template": "{{inactivity_reminder_email_html}}",
+    "performance_improvement_template": "{{performance_improvement_email_html}}",
+    "weekly_newsletter_template": "{{weekly_newsletter_html}}"
+  }
+}
+
+
+

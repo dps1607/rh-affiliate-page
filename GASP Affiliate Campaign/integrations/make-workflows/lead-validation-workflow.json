@@ -1,0 +1,454 @@
+{
+  "workflow": {
+    "name": "GASP Lead Validation & Fraud Prevention",
+    "description": "Validates new leads from Tapfiliate, performs fraud checks, and assigns quality tiers",
+    "version": "1.0",
+    "trigger": {
+      "type": "webhook",
+      "name": "New Lead from Tapfiliate",
+      "endpoint": "/webhooks/tapfiliate/lead",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-Tapfiliate-Signature": "{{hmac_sha256}}"
+      },
+      "body": {
+        "lead_id": "{{lead_id}}",
+        "partner_id": "{{partner_id}}",
+        "email": "{{email}}",
+        "first_name": "{{first_name}}",
+        "last_name": "{{last_name}}",
+        "phone": "{{phone}}",
+        "ip_address": "{{ip_address}}",
+        "user_agent": "{{user_agent}}",
+        "referrer_url": "{{referrer_url}}",
+        "timestamp": "{{timestamp}}"
+      }
+    },
+    "modules": [
+      {
+        "id": "webhook_trigger",
+        "name": "Tapfiliate Webhook",
+        "type": "webhook",
+        "position": {"x": 100, "y": 100},
+        "outputs": ["lead_data"]
+      },
+      {
+        "id": "hmac_validation",
+        "name": "HMAC Signature Validation",
+        "type": "code",
+        "position": {"x": 300, "y": 100},
+        "inputs": ["lead_data", "webhook_secret"],
+        "code": "// Validate HMAC signature from Tapfiliate\nconst crypto = require('crypto');\nconst expectedSignature = crypto\n  .createHmac('sha256', webhook_secret)\n  .update(JSON.stringify(lead_data))\n  .digest('hex');\n\nif (expectedSignature !== lead_data.headers['X-Tapfiliate-Signature']) {\n  throw new Error('Invalid signature');\n}\n\nreturn { validated: true, lead: lead_data.body };",
+        "outputs": ["validated_lead"]
+      },
+      {
+        "id": "email_verification",
+        "name": "NeverBounce Email Verification",
+        "type": "http",
+        "position": {"x": 500, "y": 100},
+        "method": "POST",
+        "url": "https://api.neverbounce.com/v4/single/check",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{neverbounce_api_key}}"
+        },
+        "body": {
+          "email": "{{validated_lead.email}}",
+          "ip_address": "{{validated_lead.ip_address}}"
+        },
+        "outputs": ["email_result"]
+      },
+      {
+        "id": "ip_quality_check",
+        "name": "IPQS IP Quality Scoring",
+        "type": "http",
+        "position": {"x": 500, "y": 200},
+        "method": "GET",
+        "url": "https://ipqualityscore.com/api/json/ip/{{ipqs_api_key}}/{{validated_lead.ip_address}}",
+        "outputs": ["ip_result"]
+      },
+      {
+        "id": "geolocation_check",
+        "name": "Geolocation Validation",
+        "type": "code",
+        "position": {"x": 700, "y": 200},
+        "inputs": ["ip_result"],
+        "code": "// Check if IP is US-based\nconst country = ip_result.country_code;\nconst isUS = country === 'US';\n\nreturn {\n  is_us: isUS,\n  country: country,\n  city: ip_result.city,\n  state: ip_result.region\n};",
+        "outputs": ["geo_result"]
+      },
+      {
+        "id": "velocity_check",
+        "name": "Velocity Cap Check",
+        "type": "airtable",
+        "position": {"x": 700, "y": 300},
+        "operation": "search",
+        "base": "{{airtable_base_id}}",
+        "table": "Leads",
+        "filters": {
+          "ip_address": "{{validated_lead.ip_address}}",
+          "created": "{{date_subtract(now(), 1, 'hour')}}"
+        },
+        "outputs": ["recent_leads"]
+      },
+      {
+        "id": "velocity_validation",
+        "name": "Velocity Validation Logic",
+        "type": "code",
+        "position": {"x": 900, "y": 300},
+        "inputs": ["recent_leads"],
+        "code": "// Check velocity cap (max 5 registrations per IP per hour)\nconst leadCount = recent_leads.length;\nconst maxLeadsPerHour = 5;\nconst velocityPass = leadCount < maxLeadsPerHour;\n\nreturn {\n  velocity_pass: velocityPass,\n  recent_count: leadCount,\n  max_allowed: maxLeadsPerHour\n};",
+        "outputs": ["velocity_result"]
+      },
+      {
+        "id": "deduplication_check",
+        "name": "Deduplication Check",
+        "type": "airtable",
+        "position": {"x": 700, "y": 400},
+        "operation": "search",
+        "base": "{{airtable_base_id}}",
+        "table": "Leads",
+        "filters": {
+          "email": "{{validated_lead.email}}",
+          "created": "{{date_subtract(now(), 30, 'days')}}"
+        },
+        "outputs": ["existing_leads"]
+      },
+      {
+        "id": "deduplication_logic",
+        "name": "Deduplication Logic",
+        "type": "code",
+        "position": {"x": 900, "y": 400},
+        "inputs": ["existing_leads", "validated_lead"],
+        "code": "// Check for duplicates within 30-day window\nconst isDuplicate = existing_leads.length > 0;\nconst duplicateType = isDuplicate ? 'email' : 'new';\n\nreturn {\n  is_duplicate: isDuplicate,\n  duplicate_type: duplicateType,\n  existing_count: existing_leads.length\n};",
+        "outputs": ["dedup_result"]
+      },
+      {
+        "id": "quality_scoring",
+        "name": "Quality Score Calculation",
+        "type": "code",
+        "position": {"x": 1100, "y": 250},
+        "inputs": ["email_result", "ip_result", "geo_result", "velocity_result", "dedup_result"],
+        "code": "// Calculate overall quality score (0-100)\nlet score = 100;\nlet riskFactors = [];\n\n// Email verification\nif (email_result.result !== 'valid') {\n  score -= 30;\n  riskFactors.push('Invalid email');\n}\n\n// IP quality\nif (ip_result.fraud_score > 80) {\n  score -= 25;\n  riskFactors.push('High fraud score');\n}\n\n// Geolocation\nif (!geo_result.is_us) {\n  score -= 40;\n  riskFactors.push('Non-US location');\n}\n\n// Velocity\nif (!velocity_result.velocity_pass) {\n  score -= 20;\n  riskFactors.push('Velocity cap exceeded');\n}\n\n// Deduplication\nif (dedup_result.is_duplicate) {\n  score -= 15;\n  riskFactors.push('Duplicate lead');\n}\n\n// Ensure score doesn't go below 0\nscore = Math.max(0, score);\n\nreturn {\n  quality_score: score,\n  risk_factors: riskFactors,\n  overall_status: score >= 70 ? 'valid' : score >= 40 ? 'review' : 'invalid'\n};",
+        "outputs": ["quality_result"]
+      },
+      {
+        "id": "tier_assignment",
+        "name": "Quality Tier Assignment",
+        "type": "code",
+        "position": {"x": 1300, "y": 250},
+        "inputs": ["quality_result"],
+        "code": "// Assign quality tier based on score\nlet tier;\nif (quality_result.quality_score >= 85) {\n  tier = '$4';\n} else if (quality_result.quality_score >= 70) {\n  tier = '$3';\n} else {\n  tier = 'Review';\n}\n\nreturn {\n  quality_tier: tier,\n  commission_rate: tier === '$4' ? 4.00 : tier === '$3' ? 3.00 : 0.00\n};",
+        "outputs": ["tier_result"]
+      },
+      {
+        "id": "airtable_create_lead",
+        "name": "Create Lead in Airtable",
+        "type": "airtable",
+        "position": {"x": 1500, "y": 250},
+        "operation": "create",
+        "base": "{{airtable_base_id}}",
+        "table": "Leads",
+        "fields": {
+          "Partner": "{{validated_lead.partner_id}}",
+          "Email": "{{validated_lead.email}}",
+          "First Name": "{{validated_lead.first_name}}",
+          "Last Name": "{{validated_lead.last_name}}",
+          "Phone": "{{validated_lead.phone}}",
+          "IP Address": "{{validated_lead.ip_address}}",
+          "User Agent": "{{validated_lead.user_agent}}",
+          "Referrer URL": "{{validated_lead.referrer_url}}",
+          "Email Verification": "{{email_result.result === 'valid' ? 'Valid' : 'Invalid'}}",
+          "IP Quality Score": "{{ip_result.fraud_score}}",
+          "Bot Protection": "{{ip_result.bot_status === 'bot' ? 'Fail' : 'Pass'}}",
+          "Geolocation": "{{geo_result.is_us ? 'US' : 'International'}}",
+          "Velocity Check": "{{velocity_result.velocity_pass ? 'Pass' : 'Fail'}}",
+          "Deduplication": "{{dedup_result.is_duplicate ? 'Duplicate' : 'New'}}",
+          "Overall Status": "{{quality_result.overall_status}}",
+          "Quality Tier": "{{tier_result.quality_tier}}",
+          "Risk Score": "{{quality_result.quality_score}}",
+          "Validation Notes": "{{quality_result.risk_factors.join(', ')}}"
+        },
+        "outputs": ["created_lead"]
+      },
+      {
+        "id": "activecampaign_sync",
+        "name": "Sync to ActiveCampaign",
+        "type": "http",
+        "position": {"x": 1500, "y": 350},
+        "method": "POST",
+        "url": "https://{{ac_account}}.api-us1.com/api/3/contacts",
+        "headers": {
+          "Content-Type": "application/json",
+          "Api-Token": "{{activecampaign_api_key}}"
+        },
+        "body": {
+          "contact": {
+            "email": "{{validated_lead.email}}",
+            "firstName": "{{validated_lead.first_name}}",
+            "lastName": "{{validated_lead.last_name}}",
+            "phone": "{{validated_lead.phone}}",
+            "customFieldValues": [
+              {
+                "field": "{{ac_custom_field_partner_id}}",
+                "value": "{{validated_lead.partner_id}}"
+              },
+              {
+                "field": "{{ac_custom_field_quality_tier}}",
+                "value": "{{tier_result.quality_tier}}"
+              },
+              {
+                "field": "{{ac_custom_field_risk_score}}",
+                "value": "{{quality_result.quality_score}}"
+              }
+            ]
+          }
+        },
+        "outputs": ["ac_contact"]
+      },
+      {
+        "id": "ac_tag_assignment",
+        "name": "Assign ActiveCampaign Tags",
+        "type": "http",
+        "position": {"x": 1700, "y": 350},
+        "method": "POST",
+        "url": "https://{{ac_account}}.api-us1.com/api/3/contactTags",
+        "headers": {
+          "Content-Type": "application/json",
+          "Api-Token": "{{activecampaign_api_key}}"
+        },
+        "body": {
+          "contactTag": {
+            "contact": "{{ac_contact.contact.id}}",
+            "tag": "{{ac_tag_affiliate_lead}}"
+          }
+        },
+        "outputs": ["tag_result"]
+      },
+      {
+        "id": "ac_sequence_trigger",
+        "name": "Trigger Affiliate Onboarding Sequence",
+        "type": "http",
+        "position": {"x": 1700, "y": 450},
+        "method": "POST",
+        "url": "https://{{ac_account}}.api-us1.com/api/3/automations/{{ac_automation_affiliate_onboarding}}/contactLogs",
+        "headers": {
+          "Content-Type": "application/json",
+          "Api-Token": "{{activecampaign_api_key}}"
+        },
+        "body": {
+          "contactLog": {
+            "contact": "{{ac_contact.contact.id}}",
+            "automation": "{{ac_automation_affiliate_onboarding}}"
+          }
+        },
+        "outputs": ["automation_result"]
+      },
+      {
+        "id": "success_response",
+        "name": "Success Response",
+        "type": "webhook_response",
+        "position": {"x": 1900, "y": 250},
+        "status": 200,
+        "body": {
+          "success": true,
+          "lead_id": "{{created_lead.id}}",
+          "quality_tier": "{{tier_result.quality_tier}}",
+          "commission_rate": "{{tier_result.commission_rate}}",
+          "status": "{{quality_result.overall_status}}"
+        }
+      },
+      {
+        "id": "error_handler",
+        "name": "Error Handler",
+        "type": "error_handler",
+        "position": {"x": 1900, "y": 100},
+        "error_type": "any",
+        "actions": [
+          {
+            "type": "airtable",
+            "operation": "create",
+            "base": "{{airtable_base_id}}",
+            "table": "Error Logs",
+            "fields": {
+              "Error Type": "Lead Validation",
+              "Error Message": "{{error.message}}",
+              "Lead Data": "{{JSON.stringify(validated_lead)}}",
+              "Timestamp": "{{now()}}"
+            }
+          },
+          {
+            "type": "webhook_response",
+            "status": 500,
+            "body": {
+              "success": false,
+              "error": "{{error.message}}"
+            }
+          }
+        ]
+      }
+    ],
+    "connections": [
+      {
+        "from": "webhook_trigger",
+        "to": "hmac_validation",
+        "condition": "always"
+      },
+      {
+        "from": "hmac_validation",
+        "to": "email_verification",
+        "condition": "success"
+      },
+      {
+        "from": "hmac_validation",
+        "to": "ip_quality_check",
+        "condition": "success"
+      },
+      {
+        "from": "hmac_validation",
+        "to": "geolocation_check",
+        "condition": "success"
+      },
+      {
+        "from": "ip_quality_check",
+        "to": "geolocation_check",
+        "condition": "success"
+      },
+      {
+        "from": "geolocation_check",
+        "to": "velocity_check",
+        "condition": "success"
+      },
+      {
+        "from": "velocity_check",
+        "to": "velocity_validation",
+        "condition": "success"
+      },
+      {
+        "from": "geolocation_check",
+        "to": "deduplication_check",
+        "condition": "success"
+      },
+      {
+        "from": "deduplication_check",
+        "to": "deduplication_logic",
+        "condition": "success"
+      },
+      {
+        "from": "velocity_validation",
+        "to": "quality_scoring",
+        "condition": "success"
+      },
+      {
+        "from": "deduplication_logic",
+        "to": "quality_scoring",
+        "condition": "success"
+      },
+      {
+        "from": "quality_scoring",
+        "to": "tier_assignment",
+        "condition": "success"
+      },
+      {
+        "from": "tier_assignment",
+        "to": "airtable_create_lead",
+        "condition": "success"
+      },
+      {
+        "from": "tier_assignment",
+        "to": "activecampaign_sync",
+        "condition": "success"
+      },
+      {
+        "from": "activecampaign_sync",
+        "to": "ac_tag_assignment",
+        "condition": "success"
+      },
+      {
+        "from": "ac_tag_assignment",
+        "to": "ac_sequence_trigger",
+        "condition": "success"
+      },
+      {
+        "from": "ac_sequence_trigger",
+        "to": "success_response",
+        "condition": "success"
+      },
+      {
+        "from": "hmac_validation",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "email_verification",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "ip_quality_check",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "geolocation_check",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "velocity_check",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "deduplication_check",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "quality_scoring",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "tier_assignment",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "airtable_create_lead",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "activecampaign_sync",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "ac_tag_assignment",
+        "to": "error_handler",
+        "condition": "error"
+      },
+      {
+        "from": "ac_sequence_trigger",
+        "to": "error_handler",
+        "condition": "error"
+      }
+    ],
+    "environment_variables": {
+      "neverbounce_api_key": "{{NEVERBOUNCE_API_KEY}}",
+      "ipqs_api_key": "{{IPQS_API_KEY}}",
+      "airtable_base_id": "{{AIRTABLE_BASE_ID}}",
+      "airtable_api_key": "{{AIRTABLE_API_KEY}}",
+      "activecampaign_api_key": "{{ACTIVECAMPAIGN_API_KEY}}",
+      "ac_account": "{{ACTIVECAMPAIGN_ACCOUNT}}",
+      "ac_custom_field_partner_id": "{{AC_CUSTOM_FIELD_PARTNER_ID}}",
+      "ac_custom_field_quality_tier": "{{AC_CUSTOM_FIELD_QUALITY_TIER}}",
+      "ac_custom_field_risk_score": "{{AC_CUSTOM_FIELD_RISK_SCORE}}",
+      "ac_tag_affiliate_lead": "{{AC_TAG_AFFILIATE_LEAD}}",
+      "ac_automation_affiliate_onboarding": "{{AC_AUTOMATION_AFFILIATE_ONBOARDING}}",
+      "webhook_secret": "{{TAPFILIATE_WEBHOOK_SECRET}}"
+    }
+  }
+}
+

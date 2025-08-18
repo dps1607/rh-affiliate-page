@@ -1,0 +1,219 @@
+{
+  "name": "ThriveCart Lead Processing & Affiliate Tracking",
+  "description": "Processes leads from ThriveCart, syncs with ActiveCampaign, and tracks affiliate performance in Airtable",
+  "flow": {
+    "modules": [
+      {
+        "id": "thrivecart_webhook",
+        "name": "ThriveCart Webhook",
+        "type": "webhook",
+        "config": {
+          "url": "https://hook.eu1.make.com/YOUR_WEBHOOK_ID",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      {
+        "id": "parse_lead_data",
+        "name": "Parse Lead Data",
+        "type": "json",
+        "config": {
+          "source": "{{thrivecart_webhook.body}}",
+          "mapping": {
+            "email": "{{email}}",
+            "firstName": "{{first_name}}",
+            "lastName": "{{last_name}}",
+            "affiliateId": "{{aff}}",
+            "utmSource": "{{utm_source}}",
+            "utmMedium": "{{utm_medium}}",
+            "utmCampaign": "{{utm_campaign}}",
+            "productType": "{{product_type}}",
+            "amount": "{{amount}}",
+            "timestamp": "{{timestamp}}"
+          }
+        }
+      },
+      {
+        "id": "activecampaign_create_contact",
+        "name": "Create ActiveCampaign Contact",
+        "type": "http",
+        "config": {
+          "url": "https://{{AC_ACCOUNT}}.api-us1.com/api/3/contacts",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{AC_API_KEY}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "contact": {
+              "email": "{{parse_lead_data.email}}",
+              "firstName": "{{parse_lead_data.firstName}}",
+              "lastName": "{{parse_lead_data.lastName}}",
+              "customField": {
+                "affiliate_id": "{{parse_lead_data.affiliateId}}",
+                "utm_source": "{{parse_lead_data.utmSource}}",
+                "utm_medium": "{{parse_lead_data.utmMedium}}",
+                "utm_campaign": "{{parse_lead_data.utmCampaign}}",
+                "product_type": "{{parse_lead_data.productType}}",
+                "registration_date": "{{parse_lead_data.timestamp}}"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "add_to_sequence",
+        "name": "Add to Email Sequence",
+        "type": "http",
+        "config": {
+          "url": "https://{{AC_ACCOUNT}}.api-us1.com/api/3/contactAutomations",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{AC_API_KEY}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "contactAutomation": {
+              "contact": "{{activecampaign_create_contact.contact.id}}",
+              "automation": "{{parse_lead_data.productType == 'masterclass' ? 'masterclass_registration' : 'course_purchase'}}"
+            }
+          }
+        }
+      },
+      {
+        "id": "update_airtable",
+        "name": "Update Airtable Lead Ledger",
+        "type": "http",
+        "config": {
+          "url": "https://api.airtable.com/v0/{{AIRTABLE_BASE_ID}}/Leads",
+          "method": "POST",
+          "headers": {
+            "Authorization": "Bearer {{AIRTABLE_API_KEY}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "records": [
+              {
+                "fields": {
+                  "Email": "{{parse_lead_data.email}}",
+                  "First Name": "{{parse_lead_data.firstName}}",
+                  "Last Name": "{{parse_lead_data.lastName}}",
+                  "Affiliate ID": "{{parse_lead_data.affiliateId}}",
+                  "UTM Source": "{{parse_lead_data.utmSource}}",
+                  "UTM Medium": "{{parse_lead_data.utmMedium}}",
+                  "UTM Campaign": "{{parse_lead_data.utmCampaign}}",
+                  "Product Type": "{{parse_lead_data.productType}}",
+                  "Amount": "{{parse_lead_data.amount}}",
+                  "Registration Date": "{{parse_lead_data.timestamp}}",
+                  "Status": "{{parse_lead_data.productType == 'masterclass' ? 'Registered' : 'Purchased'}}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "update_affiliate_performance",
+        "name": "Update Affiliate Performance",
+        "type": "http",
+        "config": {
+          "url": "https://api.airtable.com/v0/{{AIRTABLE_BASE_ID}}/Affiliates",
+          "method": "PATCH",
+          "headers": {
+            "Authorization": "Bearer {{AIRTABLE_API_KEY}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "records": [
+              {
+                "id": "{{lookup_affiliate_id.records[0].id}}",
+                "fields": {
+                  "Total Leads": "{{lookup_affiliate_id.records[0].fields.Total Leads + 1}}",
+                  "Total Sales": "{{parse_lead_data.productType == 'course' ? lookup_affiliate_id.records[0].fields.Total Sales + 1 : lookup_affiliate_id.records[0].fields.Total Sales}}",
+                  "Total Revenue": "{{parse_lead_data.productType == 'course' ? lookup_affiliate_id.records[0].fields.Total Revenue + parse_lead_data.amount : lookup_affiliate_id.records[0].fields.Total Revenue}}",
+                  "Last Activity": "{{parse_lead_data.timestamp}}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lookup_affiliate_id",
+        "name": "Lookup Affiliate ID",
+        "type": "http",
+        "config": {
+          "url": "https://api.airtable.com/v0/{{AIRTABLE_BASE_ID}}/Affiliates?filterByFormula={Affiliate ID}='{{parse_lead_data.affiliateId}}'",
+          "method": "GET",
+          "headers": {
+            "Authorization": "Bearer {{AIRTABLE_API_KEY}}"
+          }
+        }
+      },
+      {
+        "id": "success_response",
+        "name": "Success Response",
+        "type": "webhook_response",
+        "config": {
+          "status": 200,
+          "body": {
+            "success": true,
+            "message": "Lead processed successfully",
+            "contact_id": "{{activecampaign_create_contact.contact.id}}",
+            "affiliate_id": "{{parse_lead_data.affiliateId}}"
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": "thrivecart_webhook",
+        "to": "parse_lead_data"
+      },
+      {
+        "from": "parse_lead_data",
+        "to": "activecampaign_create_contact"
+      },
+      {
+        "from": "activecampaign_create_contact",
+        "to": "add_to_sequence"
+      },
+      {
+        "from": "add_to_sequence",
+        "to": "update_airtable"
+      },
+      {
+        "from": "update_airtable",
+        "to": "lookup_affiliate_id"
+      },
+      {
+        "from": "lookup_affiliate_id",
+        "to": "update_affiliate_performance"
+      },
+      {
+        "from": "update_affiliate_performance",
+        "to": "success_response"
+      }
+    ]
+  },
+  "environment_variables": {
+    "AC_ACCOUNT": "your_activecampaign_account",
+    "AC_API_KEY": "your_activecampaign_api_key",
+    "AIRTABLE_BASE_ID": "your_airtable_base_id",
+    "AIRTABLE_API_KEY": "your_airtable_api_key"
+  },
+  "notes": [
+    "This workflow processes leads from ThriveCart webhooks",
+    "Creates contacts in ActiveCampaign with custom fields",
+    "Adds contacts to appropriate email sequences",
+    "Updates Airtable lead ledger and affiliate performance",
+    "Handles both masterclass registrations and course purchases",
+    "Tracks affiliate performance metrics automatically"
+  ]
+}
+
+
+
+

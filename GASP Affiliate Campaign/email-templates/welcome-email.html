@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Your Fertility Masterclass!</title>
+    <style>
+        /* Reset styles */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+        
+        /* Base styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f4f4;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #e91e63 0%, #ff6b9d 100%);
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #ffffff;
+            font-size: 28px;
+            margin: 0;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .welcome-message {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+        
+        .highlight-box {
+            background-color: #f8f9ff;
+            border-left: 4px solid #e91e63;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+        
+        .highlight-box h3 {
+            color: #e91e63;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #e91e63, #ff6b9d);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .cta-button:hover {
+            background: linear-gradient(45deg, #d81b60, #e91e63);
+        }
+        
+        .feature-list {
+            margin: 25px 0;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .feature-icon {
+            background: #e91e63;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #666666;
+        }
+        
+        .social-links {
+            margin: 20px 0;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #e91e63;
+            text-decoration: none;
+        }
+        
+        .unsubscribe {
+            font-size: 12px;
+            color: #999999;
+            margin-top: 20px;
+        }
+        
+        .unsubscribe a {
+            color: #999999;
+            text-decoration: none;
+        }
+        
+        /* Mobile responsive */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            
+            .content {
+                padding: 20px 15px !important;
+            }
+            
+            .header h1 {
+                font-size: 24px !important;
+            }
+            
+            .welcome-message {
+                font-size: 16px !important;
+            }
+            
+            .cta-button {
+                display: block !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+        <tr>
+            <td align="center" style="background-color: #f4f4f4; padding: 20px 0;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container">
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            <h1>🎉 Welcome to Your Fertility Journey!</h1>
+                            <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px;">
+                                You're officially registered for Dr. Nashat Latib's FREE masterclass
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td class="content">
+                            <p class="welcome-message">
+                                Hi {first_name},
+                            </p>
+                            
+                            <p class="welcome-message">
+                                Thank you for registering for <strong>"Get Pregnant Naturally Masterclass"</strong> with Dr. Nashat Latib!
+                            </p>
+                            
+                            <p class="welcome-message">
+                                I'm so excited to share this journey with you. In just a few days, you'll discover the natural fertility secrets that have helped thousands of women achieve their dream of motherhood.
+                            </p>
+                            
+                            <div class="highlight-box">
+                                <h3>📅 Your Masterclass Details</h3>
+                                <p><strong>Date:</strong> {masterclass_date}</p>
+                                <p><strong>Time:</strong> 7:00 PM EST (4:00 PM PST)</p>
+                                <p><strong>Duration:</strong> 60 minutes + Live Q&A</p>
+                                <p><strong>Format:</strong> Online webinar (mobile-friendly)</p>
+                            </div>
+                            
+                            <div class="feature-list">
+                                <h3 style="color: #e91e63; margin-bottom: 20px;">What You'll Get:</h3>
+                                
+                                <div class="feature-item">
+                                    <span class="feature-icon">✓</span>
+                                    <span>FREE 60-minute masterclass with Dr. Latib</span>
+                                </div>
+                                
+                                <div class="feature-item">
+                                    <span class="feature-icon">✓</span>
+                                    <span>Live Q&A session with fertility expert</span>
+                                </div>
+                                
+                                <div class="feature-item">
+                                    <span class="feature-icon">✓</span>
+                                    <span>Fertility checklist and action plan</span>
+                                </div>
+                                
+                                <div class="feature-item">
+                                    <span class="feature-icon">✓</span>
+                                    <span>Exclusive access to natural fertility methods</span>
+                                </div>
+                                
+                                <div class="feature-item">
+                                    <span class="feature-icon">✓</span>
+                                    <span>Replay access for 48 hours</span>
+                                </div>
+                            </div>
+                            
+                            <p style="font-size: 16px; color: #333333; margin: 30px 0;">
+                                <strong>Next Steps:</strong>
+                            </p>
+                            
+                            <ol style="font-size: 16px; color: #333333; line-height: 1.8;">
+                                <li><strong>Add to Calendar:</strong> I'll send you a calendar invite in the next email</li>
+                                <li><strong>Prepare Questions:</strong> Think about your fertility challenges</li>
+                                <li><strong>Test Your Connection:</strong> Ensure stable internet for the webinar</li>
+                                <li><strong>Set Reminders:</strong> You'll get reminder emails before the masterclass</li>
+                            </ol>
+                            
+                            <div style="text-align: center; margin: 40px 0;">
+                                <a href="{calendar_link}" class="cta-button">
+                                    📅 Add to Calendar
+                                </a>
+                            </div>
+                            
+                            <p style="font-size: 16px; color: #333333; margin: 30px 0;">
+                                <strong>Why This Masterclass is Different:</strong>
+                            </p>
+                            
+                            <p style="font-size: 16px; color: #333333; line-height: 1.7;">
+                                Unlike other fertility programs, Dr. Latib's approach combines modern medical knowledge with time-tested natural methods. You'll learn practical, actionable strategies that you can implement immediately - no expensive treatments or invasive procedures required.
+                            </p>
+                            
+                            <div style="background-color: #fff5f8; border: 2px solid #e91e63; border-radius: 10px; padding: 25px; margin: 30px 0; text-align: center;">
+                                <h3 style="color: #e91e63; margin-top: 0;">💝 Your Free Gift</h3>
+                                <p style="font-size: 16px; color: #333333; margin-bottom: 20px;">
+                                    As a special thank you, I'm giving you immediate access to my <strong>"Fertility Foundation Checklist"</strong> - a comprehensive guide to optimizing your fertility naturally.
+                                </p>
+                                <a href="{checklist_link}" class="cta-button" style="background: #e91e63;">
+                                    Download Your Free Checklist
+                                </a>
+                            </div>
+                            
+                            <p style="font-size: 16px; color: #333333; margin: 30px 0;">
+                                I can't wait to see you at the masterclass and help you on your fertility journey!
+                            </p>
+                            
+                            <p style="font-size: 16px; color: #333333; margin: 30px 0;">
+                                Warmly,<br>
+                                <strong>Dr. Nashat Latib</strong><br>
+                                Fertility Specialist & Natural Conception Expert
+                            </p>
+                            
+                            <div style="text-align: center; margin: 40px 0;">
+                                <p style="font-size: 14px; color: #666666; margin-bottom: 20px;">
+                                    <strong>P.S.</strong> Spots are filling up fast! Make sure to mark your calendar and set a reminder. You won't want to miss this life-changing masterclass.
+                                </p>
+                                
+                                <p style="font-size: 14px; color: #666666;">
+                                    <strong>P.P.S.</strong> Have a friend who's also trying to conceive? Forward this email to them - they can still register for free!
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            <div style="margin-bottom: 20px;">
+                                <img src="{logo_url}" alt="Dr. Nashat Latib" style="height: 50px; width: auto;">
+                            </div>
+                            
+                            <p style="margin: 20px 0;">
+                                <strong>Dr. Nashat Latib</strong><br>
+                                Natural Fertility Specialist<br>
+                                Helping women achieve their dream of motherhood
+                            </p>
+                            
+                            <div class="social-links">
+                                <a href="{facebook_url}">Facebook</a> |
+                                <a href="{instagram_url}">Instagram</a> |
+                                <a href="{youtube_url}">YouTube</a> |
+                                <a href="{website_url}">Website</a>
+                            </div>
+                            
+                            <p style="margin: 20px 0; font-size: 14px; color: #666666;">
+                                <strong>Contact:</strong><br>
+                                Email: info@drlatib.com<br>
+                                Website: www.drlatib.com
+                            </p>
+                            
+                            <div class="unsubscribe">
+                                <p>
+                                    You received this email because you registered for Dr. Nashat Latib's Fertility Masterclass. 
+                                    If you no longer wish to receive these emails, you can 
+                                    <a href="{unsubscribe_url}">unsubscribe here</a>.
+                                </p>
+                                <p style="margin-top: 10px;">
+                                    {company_address}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+

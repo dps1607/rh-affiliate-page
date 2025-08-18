@@ -1,0 +1,145 @@
+{
+  "name": "GASP Partner Onboarding Automation",
+  "flow": {
+    "modules": [
+      {
+        "id": "webhook_trigger",
+        "name": "Partner Application Webhook",
+        "type": "webhook",
+        "config": {
+          "url": "{{webhook_url}}/partner-application",
+          "method": "POST"
+        }
+      },
+      {
+        "id": "airtable_create_partner",
+        "name": "Create Partner Record",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "create",
+          "fields": {
+            "First Name": "{{webhook_trigger.body.firstName}}",
+            "Last Name": "{{webhook_trigger.body.lastName}}",
+            "Email": "{{webhook_trigger.body.email}}",
+            "Phone": "{{webhook_trigger.body.phone}}",
+            "Company/Clinic": "{{webhook_trigger.body.company}}",
+            "Primary Platform": "{{webhook_trigger.body.platform}}",
+            "Platform Handle/URL": "{{webhook_trigger.body.platformUrl}}",
+            "Follower Count": "{{webhook_trigger.body.followerCount}}",
+            "Audience Type": "{{webhook_trigger.body.audienceType}}",
+            "Estimated Engagement Rate": "{{webhook_trigger.body.engagementRate}}",
+            "Program Choice": "{{webhook_trigger.body.programChoice}}",
+            "Status": "Pending",
+            "Application Date": "{{webhook_trigger.body.timestamp}}"
+          }
+        }
+      },
+      {
+        "id": "activecampaign_create_contact",
+        "name": "Create ActiveCampaign Contact",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/contacts",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "contact": {
+              "email": "{{webhook_trigger.body.email}}",
+              "firstName": "{{webhook_trigger.body.firstName}}",
+              "lastName": "{{webhook_trigger.body.lastName}}",
+              "phone": "{{webhook_trigger.body.phone}}",
+              "customFields": [
+                {
+                  "id": "affiliate_id",
+                  "value": "{{airtable_create_partner.id}}"
+                },
+                {
+                  "id": "program_choice",
+                  "value": "{{webhook_trigger.body.programChoice}}"
+                },
+                {
+                  "id": "platform",
+                  "value": "{{webhook_trigger.body.platform}}"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "send_welcome_email",
+        "name": "Send Welcome Email",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/contactAutomations",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "contactAutomation": {
+              "contact": "{{activecampaign_create_contact.id}}",
+              "automation": "{{welcome_automation_id}}"
+            }
+          }
+        }
+      },
+      {
+        "id": "send_approval_email",
+        "name": "Send Approval Email",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/emails",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "email": {
+              "email": "{{webhook_trigger.body.email}}",
+              "subject": "Welcome to GASP Affiliate Program!",
+              "htmlBody": "{{welcome_email_template}}",
+              "from": "affiliates@drnashatlatib.com"
+            }
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": "webhook_trigger",
+        "to": "airtable_create_partner"
+      },
+      {
+        "from": "airtable_create_partner",
+        "to": "activecampaign_create_contact"
+      },
+      {
+        "from": "activecampaign_create_contact",
+        "to": "send_welcome_email"
+      },
+      {
+        "from": "send_welcome_email",
+        "to": "send_approval_email"
+      }
+    ]
+  },
+  "variables": {
+    "webhook_url": "https://your-domain.com",
+    "airtable_base_id": "{{airtable_base_id}}",
+    "ac_account": "{{activecampaign_account}}",
+    "ac_api_key": "{{activecampaign_api_key}}",
+    "welcome_automation_id": "{{welcome_automation_id}}",
+    "welcome_email_template": "{{welcome_email_html}}"
+  }
+}
+
+
+

@@ -1,0 +1,155 @@
+{
+  "name": "GASP ThriveCart Webhook Handler",
+  "flow": {
+    "modules": [
+      {
+        "id": "webhook_trigger",
+        "name": "ThriveCart Order Webhook",
+        "type": "webhook",
+        "config": {
+          "url": "{{webhook_url}}/thrivecart-order",
+          "method": "POST"
+        }
+      },
+      {
+        "id": "validate_webhook",
+        "name": "Validate Webhook Data",
+        "type": "code",
+        "config": {
+          "code": "// Validate the ThriveCart webhook data\nconst webhookData = webhook_trigger.body;\n\n// Check if this is a valid order completion\nif (!webhookData || !webhookData.order_id) {\n  return { isValid: false, reason: 'Invalid webhook data' };\n}\n\n// Check if this is the Fertility Formula product\nconst productName = webhookData.product_name || webhookData.product_name_1 || '';\nif (!productName.toLowerCase().includes('fertility formula') && !productName.toLowerCase().includes('6 week guide')) {\n  return { isValid: false, reason: 'Not Fertility Formula product' };\n}\n\n// Check if customer has affiliate tracking\nconst affiliateId = webhookData.affiliate_id || webhookData.aff || webhookData.referral_code;\nif (!affiliateId) {\n  return { isValid: false, reason: 'No affiliate tracking found' };\n}\n\n// Validate order data\nconst orderData = {\n  orderId: webhookData.order_id,\n  customerEmail: webhookData.email || webhookData.customer_email,\n  customerName: (webhookData.first_name || '') + ' ' + (webhookData.last_name || ''),\n  productName: productName,\n  productPrice: parseFloat(webhookData.total || webhookData.amount || 0),\n  affiliateId: affiliateId,\n  orderDate: webhookData.created_at || webhookData.order_date || new Date().toISOString(),\n  orderStatus: webhookData.status || 'completed',\n  currency: webhookData.currency || 'USD'\n};\n\n// Validate required fields\nif (!orderData.customerEmail || !orderData.productPrice || orderData.productPrice < 997) {\n  return { isValid: false, reason: 'Missing required order data' };\n}\n\nreturn { \n  isValid: true, \n  orderData: orderData,\n  webhookData: webhookData\n};"
+        }
+      },
+      {
+        "id": "get_affiliate_info",
+        "name": "Get Affiliate Information",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "search",
+          "filter": "Partner ID = '{{validate_webhook.orderData.affiliateId}}' AND Status = 'Active'"
+        }
+      },
+      {
+        "id": "calculate_commission",
+        "name": "Calculate Commission Amount",
+        "type": "code",
+        "config": {
+          "code": "// Calculate commission based on affiliate's program choice and tier\nconst affiliate = get_affiliate_info[0];\nif (!affiliate) {\n  return { error: 'Affiliate not found or inactive' };\n}\n\nconst programChoice = affiliate['Program Choice'];\nconst qualityTier = affiliate['Quality Tier'];\nconst monthlyRegistrations = affiliate['Monthly Registration Count'] || 0;\n\nlet commissionAmount = 0;\nlet commissionType = '';\nlet tierDetails = '';\n\nif (programChoice === 'Option 1: Fixed Per Registration') {\n  // Fixed per registration model\n  commissionAmount = 4.00; // Base rate\n  commissionType = 'Fixed Per Registration';\n  \n  // Apply volume bonuses\n  if (monthlyRegistrations >= 150) {\n    commissionAmount = 5.00;\n    tierDetails = '150+ registrations/month tier';\n  } else if (monthlyRegistrations >= 50) {\n    commissionAmount = 4.50;\n    tierDetails = '50-150 registrations/month tier';\n  } else {\n    tierDetails = 'Base tier';\n  }\n} else if (programChoice === 'Option 2: Percentage of Sales') {\n  // Percentage of sales model\n  const basePercentage = 0.10; // 10% base\n  let finalPercentage = basePercentage;\n  \n  // Apply volume bonuses\n  if (monthlyRegistrations >= 150) {\n    finalPercentage = 0.125; // 12.5%\n    tierDetails = '150+ registrations/month tier';\n  } else if (monthlyRegistrations >= 50) {\n    finalPercentage = 0.1125; // 11.25%\n    tierDetails = '50-150 registrations/month tier';\n  } else {\n    tierDetails = 'Base tier';\n  }\n  \n  commissionAmount = validate_webhook.orderData.productPrice * finalPercentage;\n  commissionType = 'Percentage of Sales';\n}\n\nreturn {\n  affiliateId: affiliate.id,\n  affiliateName: affiliate['First Name'] + ' ' + affiliate['Last Name'],\n  affiliateEmail: affiliate['Email'],\n  programChoice: programChoice,\n  qualityTier: qualityTier,\n  commissionAmount: Math.round(commissionAmount * 100) / 100, // Round to 2 decimal places\n  commissionType: commissionType,\n  tierDetails: tierDetails,\n  monthlyRegistrations: monthlyRegistrations,\n  orderData: validate_webhook.orderData\n};"
+        }
+      },
+      {
+        "id": "create_commission_record",
+        "name": "Create Commission Record",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Commissions",
+          "action": "create",
+          "fields": {
+            "Partner": ["{{calculate_commission.affiliateId}}"],
+            "Customer Email": "{{calculate_commission.orderData.customerEmail}}",
+            "Customer Name": "{{calculate_commission.orderData.customerName}}",
+            "Purchase Amount": "{{calculate_commission.orderData.productPrice}}",
+            "Commission Amount": "{{calculate_commission.commissionAmount}}",
+            "Commission Type": "{{calculate_commission.commissionType}}",
+            "Quality Tier": "{{calculate_commission.qualityTier}}",
+            "Tier Details": "{{calculate_commission.tierDetails}}",
+            "Purchase Date": "{{calculate_commission.orderData.orderDate}}",
+            "Order ID": "{{calculate_commission.orderData.orderId}}",
+            "Status": "Pending",
+            "Payout Date": ""
+          }
+        }
+      },
+      {
+        "id": "update_affiliate_totals",
+        "name": "Update Affiliate Performance",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "update",
+          "records": [{
+            "id": "{{calculate_commission.affiliateId}}",
+            "fields": {
+              "Total Conversions": "{{get_affiliate_info.Total Conversions + 1}}",
+              "Total Revenue": "{{get_affiliate_info.Total Revenue + calculate_commission.orderData.productPrice}}",
+              "Total Commissions": "{{get_affiliate_info.Total Commissions + calculate_commission.commissionAmount}}",
+              "Weekly Commissions": "{{get_affiliate_info.Weekly Commissions + calculate_commission.commissionAmount}}",
+              "Last Activity": "{{calculate_commission.orderData.orderDate}}"
+            }
+          }]
+        }
+      },
+      {
+        "id": "send_commission_notification",
+        "name": "Send Commission Notification",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/emails",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "email": {
+              "email": "{{calculate_commission.affiliateEmail}}",
+              "subject": "💰 New Commission Earned: ${{calculate_commission.commissionAmount}}",
+              "htmlBody": "{{commission_notification_template}}",
+              "from": "affiliates@drnashatlatib.com"
+            }
+          }
+        }
+      },
+      {
+        "id": "log_webhook_response",
+        "name": "Log Webhook Response",
+        "type": "code",
+        "config": {
+          "code": "// Log successful webhook processing\nconst logData = {\n  timestamp: new Date().toISOString(),\n  orderId: validate_webhook.orderData.orderId,\n  affiliateId: calculate_commission.affiliateId,\n  commissionAmount: calculate_commission.commissionAmount,\n  status: 'success'\n};\n\nreturn { logData, success: true };"
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": "webhook_trigger",
+        "to": "validate_webhook"
+      },
+      {
+        "from": "validate_webhook",
+        "to": "get_affiliate_info"
+      },
+      {
+        "from": "get_affiliate_info",
+        "to": "calculate_commission"
+      },
+      {
+        "from": "calculate_commission",
+        "to": "create_commission_record"
+      },
+      {
+        "from": "calculate_commission",
+        "to": "update_affiliate_totals"
+      },
+      {
+        "from": "calculate_commission",
+        "to": "send_commission_notification"
+      },
+      {
+        "from": "create_commission_record",
+        "to": "log_webhook_response"
+      }
+    ]
+  },
+  "variables": {
+    "webhook_url": "{{webhook_url}}",
+    "airtable_base_id": "{{airtable_base_id}}",
+    "ac_account": "{{activecampaign_account}}",
+    "ac_api_key": "{{activecampaign_api_key}}",
+    "commission_notification_template": "{{commission_notification_email_html}}"
+  }
+}
+
+

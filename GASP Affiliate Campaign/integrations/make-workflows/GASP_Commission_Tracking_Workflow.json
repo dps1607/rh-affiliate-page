@@ -1,0 +1,212 @@
+{
+  "name": "GASP Commission Tracking Workflow",
+  "flow": {
+    "modules": [
+      {
+        "id": "webhook_trigger",
+        "name": "ThriveCart Purchase Webhook",
+        "type": "webhook",
+        "config": {
+          "url": "{{webhook_url}}/thrivecart-purchase",
+          "method": "POST"
+        }
+      },
+      {
+        "id": "validate_purchase",
+        "name": "Validate Purchase Data",
+        "type": "code",
+        "config": {
+          "code": "// Validate the purchase webhook data\nconst purchaseData = webhook_trigger.body;\n\n// Check if this is a GASP program purchase\nif (purchaseData.product_name !== 'Get & Stay Pregnant Naturally Program' && \n    purchaseData.product_name !== 'Fertility Formula Online Course') {\n  return { isValid: false, reason: 'Not a GASP program purchase' };\n}\n\n// Check if customer has affiliate tracking\nconst affiliateId = purchaseData.affiliate_id || purchaseData.aff;\nif (!affiliateId) {\n  return { isValid: false, reason: 'No affiliate tracking found' };\n}\n\n// Validate purchase amount\nconst purchaseAmount = parseFloat(purchaseData.total || purchaseData.amount);\nif (isNaN(purchaseAmount) || purchaseAmount < 997) {\n  return { isValid: false, reason: 'Invalid purchase amount' };\n}\n\nreturn { \n  isValid: true, \n  affiliateId: affiliateId,\n  customerEmail: purchaseData.email,\n  customerName: purchaseData.first_name + ' ' + purchaseData.last_name,\n  purchaseAmount: purchaseAmount,\n  purchaseDate: purchaseData.created_at || new Date().toISOString(),\n  orderId: purchaseData.order_id || purchaseData.id\n};"
+        }
+      },
+      {
+        "id": "get_affiliate_info",
+        "name": "Get Affiliate Information",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "search",
+          "filter": "Partner ID = '{{validate_purchase.affiliateId}}' AND Status = 'Active'"
+        }
+      },
+      {
+        "id": "calculate_commission",
+        "name": "Calculate Commission Amount",
+        "type": "code",
+        "config": {
+          "code": "// Calculate commission based on affiliate's program choice and tier\nconst affiliate = get_affiliate_info[0];\nif (!affiliate) {\n  return { error: 'Affiliate not found or inactive' };\n}\n\nconst programChoice = affiliate['Program Choice'];\nconst qualityTier = affiliate['Quality Tier'];\nconst monthlyRegistrations = affiliate['Monthly Registration Count'] || 0;\n\nlet commissionAmount = 0;\nlet commissionType = '';\nlet tierDetails = '';\n\nif (programChoice === 'Option 1: Fixed Per Registration') {\n  // Fixed per registration model\n  commissionAmount = 4.00; // Base rate\n  commissionType = 'Fixed Per Registration';\n  \n  // Apply volume bonuses\n  if (monthlyRegistrations >= 150) {\n    commissionAmount = 5.00;\n    tierDetails = '150+ registrations/month tier';\n  } else if (monthlyRegistrations >= 50) {\n    commissionAmount = 4.50;\n    tierDetails = '50-150 registrations/month tier';\n  } else {\n    tierDetails = 'Base tier';\n  }\n} else if (programChoice === 'Option 2: Percentage of Sales') {\n  // Percentage of sales model\n  const basePercentage = 0.10; // 10% base\n  let finalPercentage = basePercentage;\n  \n  // Apply volume bonuses\n  if (monthlyRegistrations >= 150) {\n    finalPercentage = 0.125; // 12.5%\n    tierDetails = '150+ registrations/month tier';\n  } else if (monthlyRegistrations >= 50) {\n    finalPercentage = 0.1125; // 11.25%\n    tierDetails = '50-150 registrations/month tier';\n  } else {\n    tierDetails = 'Base tier';\n  }\n  \n  commissionAmount = validate_purchase.purchaseAmount * finalPercentage;\n  commissionType = 'Percentage of Sales';\n}\n\nreturn {\n  affiliateId: affiliate.id,\n  affiliateName: affiliate['First Name'] + ' ' + affiliate['Last Name'],\n  affiliateEmail: affiliate['Email'],\n  programChoice: programChoice,\n  qualityTier: qualityTier,\n  commissionAmount: Math.round(commissionAmount * 100) / 100, // Round to 2 decimal places\n  commissionType: commissionType,\n  tierDetails: tierDetails,\n  monthlyRegistrations: monthlyRegistrations,\n  purchaseAmount: validate_purchase.purchaseAmount,\n  customerEmail: validate_purchase.customerEmail,\n  customerName: validate_purchase.customerName,\n  purchaseDate: validate_purchase.purchaseDate,\n  orderId: validate_purchase.orderId\n};"
+        }
+      },
+      {
+        "id": "create_commission_record",
+        "name": "Create Commission Record",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Commissions",
+          "action": "create",
+          "fields": {
+            "Partner": ["{{calculate_commission.affiliateId}}"],
+            "Customer Email": "{{calculate_commission.customerEmail}}",
+            "Customer Name": "{{calculate_commission.customerName}}",
+            "Purchase Amount": "{{calculate_commission.purchaseAmount}}",
+            "Commission Amount": "{{calculate_commission.commissionAmount}}",
+            "Commission Type": "{{calculate_commission.commissionType}}",
+            "Quality Tier": "{{calculate_commission.qualityTier}}",
+            "Tier Details": "{{calculate_commission.tierDetails}}",
+            "Purchase Date": "{{calculate_commission.purchaseDate}}",
+            "Order ID": "{{calculate_commission.orderId}}",
+            "Status": "Pending",
+            "Payout Date": ""
+          }
+        }
+      },
+      {
+        "id": "update_affiliate_totals",
+        "name": "Update Affiliate Totals",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "update",
+          "records": [{
+            "id": "{{calculate_commission.affiliateId}}",
+            "fields": {
+              "Total Conversions": "{{get_affiliate_info.Total Conversions + 1}}",
+              "Total Revenue": "{{get_affiliate_info.Total Revenue + calculate_commission.purchaseAmount}}",
+              "Total Commissions": "{{get_affiliate_info.Total Commissions + calculate_commission.commissionAmount}}",
+              "Weekly Commissions": "{{get_affiliate_info.Weekly Commissions + calculate_commission.commissionAmount}}",
+              "Last Activity": "{{calculate_commission.purchaseDate}}"
+            }
+          }]
+        }
+      },
+      {
+        "id": "update_lead_conversion",
+        "name": "Update Lead Conversion Status",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Leads",
+          "action": "search",
+          "filter": "Email = '{{calculate_commission.customerEmail}}' AND Partner = '{{calculate_commission.affiliateId}}'"
+        }
+      },
+      {
+        "id": "mark_lead_converted",
+        "name": "Mark Lead as Converted",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Leads",
+          "action": "update",
+          "records": [{
+            "id": "{{update_lead_conversion.id}}",
+            "fields": {
+              "Converted to Purchase": true,
+              "Purchase Amount": "{{calculate_commission.purchaseAmount}}",
+              "Commission Earned": "{{calculate_commission.commissionAmount}}",
+              "Purchase Date": "{{calculate_commission.purchaseDate}}"
+            }
+          }]
+        }
+      },
+      {
+        "id": "send_commission_notification",
+        "name": "Send Commission Notification",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/emails",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "email": {
+              "email": "{{calculate_commission.affiliateEmail}}",
+              "subject": "💰 New Commission Earned: ${{calculate_commission.commissionAmount}}",
+              "htmlBody": "{{commission_notification_template}}",
+              "from": "affiliates@drnashatlatib.com"
+            }
+          }
+        }
+      },
+      {
+        "id": "update_activecampaign",
+        "name": "Update ActiveCampaign Contact",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/contacts/{{update_lead_conversion.id}}/fieldValues",
+          "method": "PUT",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "fieldValues": [
+              {
+                "field": "conversion_status",
+                "value": "converted"
+              },
+              {
+                "field": "conversion_date",
+                "value": "{{calculate_commission.purchaseDate}}"
+              },
+              {
+                "field": "commission_earned",
+                "value": "{{calculate_commission.commissionAmount}}"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": "webhook_trigger",
+        "to": "validate_purchase"
+      },
+      {
+        "from": "validate_purchase",
+        "to": "get_affiliate_info"
+      },
+      {
+        "from": "get_affiliate_info",
+        "to": "calculate_commission"
+      },
+      {
+        "from": "calculate_commission",
+        "to": "create_commission_record"
+      },
+      {
+        "from": "calculate_commission",
+        "to": "update_affiliate_totals"
+      },
+      {
+        "from": "calculate_commission",
+        "to": "update_lead_conversion"
+      },
+      {
+        "from": "update_lead_conversion",
+        "to": "mark_lead_converted"
+      },
+      {
+        "from": "calculate_commission",
+        "to": "send_commission_notification"
+      },
+      {
+        "from": "update_lead_conversion",
+        "to": "update_activecampaign"
+      }
+    ]
+  },
+  "variables": {
+    "webhook_url": "{{webhook_url}}",
+    "airtable_base_id": "{{airtable_base_id}}",
+    "ac_account": "{{activecampaign_account}}",
+    "ac_api_key": "{{activecampaign_api_key}}",
+    "commission_notification_template": "{{commission_notification_email_html}}"
+  }
+}

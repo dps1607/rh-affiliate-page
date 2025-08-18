@@ -1,0 +1,161 @@
+{
+  "name": "GASP Performance Analytics & Reporting",
+  "flow": {
+    "modules": [
+      {
+        "id": "scheduler_trigger",
+        "name": "Daily Analytics Trigger",
+        "type": "scheduler",
+        "config": {
+          "cron": "0 6 * * *",
+          "timezone": "America/New_York"
+        }
+      },
+      {
+        "id": "airtable_get_partners",
+        "name": "Get All Active Partners",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "search",
+          "filter": "Status = 'Active'"
+        }
+      },
+      {
+        "id": "airtable_get_leads",
+        "name": "Get Recent Leads",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Leads",
+          "action": "search",
+          "filter": "Registration Date >= '{{scheduler_trigger.date}}'"
+        }
+      },
+      {
+        "id": "calculate_performance",
+        "name": "Calculate Performance Metrics",
+        "type": "code",
+        "config": {
+          "code": "// Calculate daily performance metrics for each partner\nconst performanceData = [];\n\nfor (const partner of airtable_get_partners) {\n  const partnerLeads = airtable_get_leads.filter(lead => lead.Partner[0] === partner.id);\n  \n  const metrics = {\n    partnerId: partner.id,\n    partnerName: partner['First Name'] + ' ' + partner['Last Name'],\n    dailyRegistrations: partnerLeads.length,\n    dailyConversions: partnerLeads.filter(lead => lead['Converted to Purchase']).length,\n    conversionRate: partnerLeads.length > 0 ? \n      (partnerLeads.filter(lead => lead['Converted to Purchase']).length / partnerLeads.length * 100).toFixed(2) : 0,\n    dailyRevenue: partnerLeads.filter(lead => lead['Converted to Purchase']).reduce((sum, lead) => sum + (lead['Purchase Amount'] || 0), 0),\n    dailyCommissions: partnerLeads.filter(lead => lead['Converted to Purchase']).reduce((sum, lead) => sum + (lead['Commission Earned'] || 0), 0)\n  };\n  \n  performanceData.push(metrics);\n}\n\nreturn { performanceData };"
+        }
+      },
+      {
+        "id": "update_partner_metrics",
+        "name": "Update Partner Performance",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "update",
+          "records": "{{calculate_performance.performanceData.map(data => ({\n  id: data.partnerId,\n  fields: {\n    'Daily Registrations': data.dailyRegistrations,\n    'Daily Conversions': data.dailyConversions,\n    'Daily Conversion Rate': data.conversionRate,\n    'Daily Revenue': data.dailyRevenue,\n    'Daily Commissions': data.dailyCommissions,\n    'Last Activity': '{{scheduler_trigger.date}}'\n  }\n}))}}"
+        }
+      },
+      {
+        "id": "generate_daily_report",
+        "name": "Generate Daily Report",
+        "type": "code",
+        "config": {
+          "code": "// Generate comprehensive daily report\nconst totalRegistrations = airtable_get_leads.length;\nconst totalConversions = airtable_get_leads.filter(lead => lead['Converted to Purchase']).length;\nconst overallConversionRate = totalRegistrations > 0 ? (totalConversions / totalRegistrations * 100).toFixed(2) : 0;\nconst totalRevenue = airtable_get_leads.filter(lead => lead['Converted to Purchase']).reduce((sum, lead) => sum + (lead['Purchase Amount'] || 0), 0);\nconst totalCommissions = airtable_get_leads.filter(lead => lead['Converted to Purchase']).reduce((sum, lead) => sum + (lead['Commission Earned'] || 0), 0);\n\nconst report = {\n  date: '{{scheduler_trigger.date}}',\n  summary: {\n    totalRegistrations,\n    totalConversions,\n    overallConversionRate,\n    totalRevenue,\n    totalCommissions\n  },\n  topPerformers: calculate_performance.performanceData\n    .sort((a, b) => b.dailyRegistrations - a.dailyRegistrations)\n    .slice(0, 5),\n  alerts: calculate_performance.performanceData.filter(data => \n    data.conversionRate < 9 || data.dailyRegistrations === 0\n  )\n};\n\nreturn { report };"
+        }
+      },
+      {
+        "id": "send_daily_report",
+        "name": "Send Daily Report Email",
+        "type": "http",
+        "config": {
+          "url": "https://{{ac_account}}.api-us1.com/api/3/emails",
+          "method": "POST",
+          "headers": {
+            "Api-Token": "{{ac_api_key}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "email": {
+              "email": "{{admin_email}}",
+              "subject": "GASP Daily Performance Report - {{scheduler_trigger.date}}",
+              "htmlBody": "{{daily_report_template.replace('{{report_data}}', JSON.stringify(generate_daily_report.report, null, 2))}}",
+              "from": "reports@drnashatlatib.com"
+            }
+          }
+        }
+      },
+      {
+        "id": "update_quality_tiers",
+        "name": "Update Quality Tiers",
+        "type": "code",
+        "config": {
+          "code": "// Update quality tiers based on 7-day performance\nconst tierUpdates = [];\n\nfor (const partner of airtable_get_partners) {\n  const sevenDayLeads = airtable_get_leads.filter(lead => \n    lead.Partner[0] === partner.id && \n    new Date(lead['Registration Date']) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)\n  );\n  \n  if (sevenDayLeads.length >= 10) {\n    const conversionRate = sevenDayLeads.filter(lead => lead['Converted to Purchase']).length / sevenDayLeads.length * 100;\n    \n    let newTier;\n    if (conversionRate >= 12.6) {\n      newTier = partner['Program Choice'] === 'Option 1: Fixed Per Registration' ? '$5.00' : '12.5%';\n    } else if (conversionRate >= 9.0) {\n      newTier = partner['Program Choice'] === 'Option 1: Fixed Per Registration' ? '$4.50' : '11.25%';\n    } else {\n      newTier = partner['Program Choice'] === 'Option 1: Fixed Per Registration' ? '$4.00' : '10%';\n    }\n    \n    if (newTier !== partner['Quality Tier']) {\n      tierUpdates.push({\n        id: partner.id,\n        fields: {\n          'Quality Tier': newTier,\n          'Tier Update Date': '{{scheduler_trigger.date}}'\n        }\n      });\n    }\n  }\n}\n\nreturn { tierUpdates };"
+        }
+      },
+      {
+        "id": "apply_tier_updates",
+        "name": "Apply Tier Updates",
+        "type": "airtable",
+        "config": {
+          "base": "{{airtable_base_id}}",
+          "table": "Partners",
+          "action": "update",
+          "records": "{{update_quality_tiers.tierUpdates}}"
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": "scheduler_trigger",
+        "to": "airtable_get_partners"
+      },
+      {
+        "from": "scheduler_trigger",
+        "to": "airtable_get_leads"
+      },
+      {
+        "from": "airtable_get_partners",
+        "to": "calculate_performance"
+      },
+      {
+        "from": "airtable_get_leads",
+        "to": "calculate_performance"
+      },
+      {
+        "from": "calculate_performance",
+        "to": "update_partner_metrics"
+      },
+      {
+        "from": "calculate_performance",
+        "to": "generate_daily_report"
+      },
+      {
+        "from": "airtable_get_leads",
+        "to": "generate_daily_report"
+      },
+      {
+        "from": "generate_daily_report",
+        "to": "send_daily_report"
+      },
+      {
+        "from": "airtable_get_partners",
+        "to": "update_quality_tiers"
+      },
+      {
+        "from": "airtable_get_leads",
+        "to": "update_quality_tiers"
+      },
+      {
+        "from": "update_quality_tiers",
+        "to": "apply_tier_updates"
+      }
+    ]
+  },
+  "variables": {
+    "airtable_base_id": "{{airtable_base_id}}",
+    "ac_account": "{{activecampaign_account}}",
+    "ac_api_key": "{{activecampaign_api_key}}",
+    "admin_email": "{{admin_email}}",
+    "daily_report_template": "{{daily_report_html_template}}"
+  }
+}
+
+
+

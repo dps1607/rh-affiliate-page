@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Campaign Dashboard | Dr. Nashat Latib</title>
+    <link rel="stylesheet" href="dashboard-styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="../images/dr-latib-logo.png" alt="Dr. Nashat Latib" class="logo">
+                    <h1>Affiliate Campaign Dashboard</h1>
+                </div>
+                <div class="user-section">
+                    <span class="user-name">Welcome, Affiliate</span>
+                    <button class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="dashboard-nav">
+            <ul>
+                <li><a href="#overview" class="nav-link active">Overview</a></li>
+                <li><a href="#leads" class="nav-link">Leads</a></li>
+                <li><a href="#conversions" class="nav-link">Conversions</a></li>
+                <li><a href="#earnings" class="nav-link">Earnings</a></li>
+                <li><a href="#tools" class="nav-link">Tools</a></li>
+                <li><a href="#reports" class="nav-link">Reports</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Overview Section -->
+            <section id="overview" class="dashboard-section active">
+                <h2>Campaign Overview</h2>
+                
+                <!-- Key Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">📊</div>
+                        <div class="metric-content">
+                            <h3>Total Leads</h3>
+                            <p class="metric-value" id="totalLeads">0</p>
+                            <p class="metric-change positive">+12% this week</p>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">🎯</div>
+                        <div class="metric-content">
+                            <h3>Conversion Rate</h3>
+                            <p class="metric-value" id="conversionRate">0%</p>
+                            <p class="metric-change positive">+2.3% this week</p>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">💰</div>
+                        <div class="metric-content">
+                            <h3>Total Earnings</h3>
+                            <p class="metric-value" id="totalEarnings">$0</p>
+                            <p class="metric-change positive">+$1,250 this week</p>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">⭐</div>
+                        <div class="metric-content">
+                            <h3>Lead Quality Score</h3>
+                            <p class="metric-value" id="qualityScore">0</p>
+                            <p class="metric-change positive">+0.3 this week</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Lead Generation Trend</h3>
+                        <canvas id="leadsChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <h3>Conversion Funnel</h3>
+                        <canvas id="funnelChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="activity-section">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list" id="activityList">
+                        <!-- Activity items will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Leads Section -->
+            <section id="leads" class="dashboard-section">
+                <h2>Lead Management</h2>
+                
+                <!-- Lead Filters -->
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <label>Date Range:</label>
+                        <select id="dateRange">
+                            <option value="7">Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Lead Quality:</label>
+                        <select id="qualityFilter">
+                            <option value="all">All Qualities</option>
+                            <option value="high">High Quality</option>
+                            <option value="medium">Medium Quality</option>
+                            <option value="low">Low Quality</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Source:</label>
+                        <select id="sourceFilter">
+                            <option value="all">All Sources</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="email">Email</option>
+                            <option value="organic">Organic</option>
+                        </select>
+                    </div>
+                    
+                    <button class="apply-filters-btn">Apply Filters</button>
+                </div>
+
+                <!-- Leads Table -->
+                <div class="table-container">
+                    <table class="leads-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Date</th>
+                                <th>Source</th>
+                                <th>Quality Score</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leadsTableBody">
+                            <!-- Lead rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <button class="pagination-btn" id="prevPage">Previous</button>
+                    <span class="page-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+                    <button class="pagination-btn" id="nextPage">Next</button>
+                </div>
+            </section>
+
+            <!-- Conversions Section -->
+            <section id="conversions" class="dashboard-section">
+                <h2>Conversion Tracking</h2>
+                
+                <!-- Conversion Metrics -->
+                <div class="conversion-metrics">
+                    <div class="conversion-card">
+                        <h3>Masterclass Registrations</h3>
+                        <p class="conversion-number" id="masterclassRegistrations">0</p>
+                        <p class="conversion-rate">Registration Rate: <span id="registrationRate">0%</span></p>
+                    </div>
+                    
+                    <div class="conversion-card">
+                        <h3>Course Purchases</h3>
+                        <p class="conversion-number" id="coursePurchases">0</p>
+                        <p class="conversion-rate">Purchase Rate: <span id="purchaseRate">0%</span></p>
+                    </div>
+                    
+                    <div class="conversion-card">
+                        <h3>Revenue Generated</h3>
+                        <p class="conversion-number" id="revenueGenerated">$0</p>
+                        <p class="conversion-rate">Average Order Value: <span id="averageOrderValue">$0</span></p>
+                    </div>
+                </div>
+
+                <!-- Conversion Timeline -->
+                <div class="conversion-timeline">
+                    <h3>Conversion Timeline</h3>
+                    <div class="timeline-chart">
+                        <canvas id="conversionTimelineChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Earnings Section -->
+            <section id="earnings" class="dashboard-section">
+                <h2>Earnings & Commissions</h2>
+                
+                <!-- Commission Structure -->
+                <div class="commission-structure">
+                    <h3>Commission Structure</h3>
+                    <div class="commission-grid">
+                        <div class="commission-tier">
+                            <h4>Bronze Tier</h4>
+                            <p class="commission-rate">$5 per lead</p>
+                            <p class="tier-requirements">Basic registration</p>
+                        </div>
+                        
+                        <div class="commission-tier">
+                            <h4>Silver Tier</h4>
+                            <p class="commission-rate">$10 per lead</p>
+                            <p class="tier-requirements">Attended masterclass</p>
+                        </div>
+                        
+                        <div class="commission-tier">
+                            <h4>Gold Tier</h4>
+                            <p class="commission-rate">$15 per lead</p>
+                            <p class="tier-requirements">Engaged with follow-up</p>
+                        </div>
+                        
+                        <div class="commission-tier">
+                            <h4>Platinum Tier</h4>
+                            <p class="commission-rate">$25 per lead</p>
+                            <p class="tier-requirements">Purchased course</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Earnings Chart -->
+                <div class="earnings-chart">
+                    <h3>Earnings Over Time</h3>
+                    <canvas id="earningsChart"></canvas>
+                </div>
+
+                <!-- Payment History -->
+                <div class="payment-history">
+                    <h3>Payment History</h3>
+                    <table class="payment-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Leads</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentTableBody">
+                            <!-- Payment rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Tools Section -->
+            <section id="tools" class="dashboard-section">
+                <h2>Affiliate Tools</h2>
+                
+                <!-- Link Generator -->
+                <div class="tool-card">
+                    <h3>Tracking Link Generator</h3>
+                    <div class="link-generator">
+                        <div class="input-group">
+                            <label>Campaign Name:</label>
+                            <input type="text" id="campaignName" placeholder="e.g., Facebook Campaign">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Source:</label>
+                            <select id="linkSource">
+                                <option value="facebook">Facebook</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="email">Email</option>
+                                <option value="blog">Blog</option>
+                                <option value="youtube">YouTube</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Medium:</label>
+                            <select id="linkMedium">
+                                <option value="social">Social Media</option>
+                                <option value="email">Email</option>
+                                <option value="paid">Paid Advertising</option>
+                                <option value="organic">Organic</option>
+                            </select>
+                        </div>
+                        
+                        <button class="generate-link-btn">Generate Tracking Link</button>
+                        
+                        <div class="generated-link" id="generatedLink" style="display: none;">
+                            <label>Your Tracking Link:</label>
+                            <div class="link-display">
+                                <input type="text" id="trackingLink" readonly>
+                                <button class="copy-link-btn" onclick="copyToClipboard()">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Creative Assets -->
+                <div class="tool-card">
+                    <h3>Creative Assets</h3>
+                    <div class="assets-grid">
+                        <div class="asset-item">
+                            <h4>Social Media Posts</h4>
+                            <p>Ready-to-use posts for Facebook, Instagram, and Twitter</p>
+                            <button class="download-btn">Download</button>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <h4>Ad Creatives</h4>
+                            <p>Facebook and Instagram ad images and videos</p>
+                            <button class="download-btn">Download</button>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <h4>Email Templates</h4>
+                            <p>Email templates for your email campaigns</p>
+                            <button class="download-btn">Download</button>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <h4>Banners & Graphics</h4>
+                            <p>Website banners and promotional graphics</p>
+                            <button class="download-btn">Download</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Calculator -->
+                <div class="tool-card">
+                    <h3>Commission Calculator</h3>
+                    <div class="calculator">
+                        <div class="input-group">
+                            <label>Number of Leads:</label>
+                            <input type="number" id="leadCount" min="0" value="100">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Average Quality Score:</label>
+                            <input type="number" id="qualityScore" min="0" max="10" step="0.1" value="7.5">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Conversion Rate (%):</label>
+                            <input type="number" id="conversionRate" min="0" max="100" step="0.1" value="2.5">
+                        </div>
+                        
+                        <button class="calculate-btn">Calculate Earnings</button>
+                        
+                        <div class="calculation-results" id="calculationResults" style="display: none;">
+                            <h4>Estimated Earnings:</h4>
+                            <p class="estimated-earnings" id="estimatedEarnings">$0</p>
+                            <p class="breakdown" id="earningsBreakdown"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports" class="dashboard-section">
+                <h2>Reports & Analytics</h2>
+                
+                <!-- Report Generator -->
+                <div class="report-generator">
+                    <h3>Generate Custom Report</h3>
+                    <div class="report-options">
+                        <div class="option-group">
+                            <label>Report Type:</label>
+                            <select id="reportType">
+                                <option value="performance">Performance Report</option>
+                                <option value="leads">Lead Analysis</option>
+                                <option value="conversions">Conversion Report</option>
+                                <option value="earnings">Earnings Report</option>
+                            </select>
+                        </div>
+                        
+                        <div class="option-group">
+                            <label>Date Range:</label>
+                            <input type="date" id="reportStartDate">
+                            <input type="date" id="reportEndDate">
+                        </div>
+                        
+                        <div class="option-group">
+                            <label>Format:</label>
+                            <select id="reportFormat">
+                                <option value="pdf">PDF</option>
+                                <option value="excel">Excel</option>
+                                <option value="csv">CSV</option>
+                            </select>
+                        </div>
+                        
+                        <button class="generate-report-btn">Generate Report</button>
+                    </div>
+                </div>
+
+                <!-- Saved Reports -->
+                <div class="saved-reports">
+                    <h3>Saved Reports</h3>
+                    <div class="reports-list" id="reportsList">
+                        <!-- Saved reports will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="dashboard-script.js"></script>
+</body>
+</html>
+
