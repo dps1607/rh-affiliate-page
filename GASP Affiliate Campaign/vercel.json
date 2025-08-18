@@ -9,6 +9,9 @@
     },
     "api/index.js": {
       "maxDuration": 30
+    },
+    "api/simple.js": {
+      "maxDuration": 30
     }
   }
 }
