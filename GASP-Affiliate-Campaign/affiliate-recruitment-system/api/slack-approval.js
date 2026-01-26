@@ -43,15 +43,7 @@ function verifySlackRequest(req) {
 async function createLeadDynoAffiliate(formData) {
             const response = await fetch("https://api.leaddyno.com/v1/affiliates", {
                             method: "POST",
-                            headers: {
-                                                "Content-Type": "application/x-www-form-urlencoded"
-                            },
-                            body: JSON.stringify({
-                                                key: LEADDYNO_API_KEY,
-                                                email: formData.email,
-                                                first_name: formData.firstName,
-                                                last_name: formData.lastName
-                            })
+                            body: `key=${LEADDYNO_API_KEY}&email=${encodeURIComponent(formData.email)}&first_name=${encodeURIComponent(formData.firstName)}&last_name=${encodeURIComponent(formData.lastName)}`
             });
 
     if (response.status === 409) {
