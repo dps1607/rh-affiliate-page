@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Application - Dr. Nashat Latib</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8f7f4;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .logo-circle {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #8b7d6b;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .logo-circle::before,
+        .logo-circle::after {
+            content: '';
+            position: absolute;
+            border: 2px solid #8b7d6b;
+            border-radius: 50%;
+        }
+
+        .logo-circle::before {
+            width: 35px;
+            height: 35px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .logo-circle::after {
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-color: #8b7d6b;
+        }
+
+        .brand-text h1 {
+            font-family: "Baskerville", "Libre Baskerville", Georgia, serif;
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            color: #1a1a1a;
+        }
+
+        .brand-text p {
+            font-family: "Baskerville", "Libre Baskerville", Georgia, serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #8b7d6b;
+            margin-top: 2px;
+        }
+
+        nav {
+            display: flex;
+            gap: 40px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #8b7d6b;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #f8f7f4 0%, #efe8e0 100%);
+            padding: 60px 40px;
+            text-align: center;
+            margin: 40px;
+            border-radius: 8px;
+        }
+
+        .hero h2 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: #555;
+            max-width: 600px;
+            margin: 0 auto 20px;
+            line-height: 1.7;
+        }
+
+        .hero .highlight {
+            background: #ffeaa7;
+            padding: 15px 20px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #333;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .results-section {
+            background: white;
+            padding: 50px 40px;
+            margin: 40px;
+            border-radius: 8px;
+            border-top: 4px solid #8b7d6b;
+        }
+
+        .results-section h3 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .results-section .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 20px;
+            background: #f8f7f4;
+            border-radius: 8px;
+        }
+
+        .metric .number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #8b7d6b;
+            margin-bottom: 10px;
+        }
+
+        .metric .label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .success-story {
+            background: #f0f8ff;
+            border-left: 4px solid #4a90e2;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success-story strong {
+            color: #4a90e2;
+        }
+
+        .testimonials-section {
+            background: white;
+            padding: 50px 40px;
+            margin: 40px;
+            border-radius: 8px;
+            border-top: 4px solid #8b7d6b;
+        }
+
+        .testimonials-section h3 {
+            font-size: 28px;
+            margin-bottom: 40px;
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .testimonial {
+            background: #f8f7f4;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #e2a76f;
+        }
+
+        .testimonial-text {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 15px;
+            font-style: italic;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 13px;
+        }
+
+        .testimonial-image {
+            width: 100%;
+            height: 200px;
+            background: #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        .commission-section {
+            background: white;
+            padding: 50px 40px;
+            margin: 40px;
+            border-radius: 8px;
+            border-top: 4px solid #8b7d6b;
+        }
+
+        .commission-section h3 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .commission-section .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .commission-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .commission-card {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .commission-card:hover {
+            border-color: #8b7d6b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .commission-card.featured {
+            border-color: #8b7d6b;
+            background: #f8f7f4;
+            position: relative;
+            transform: scale(1.05);
+        }
+
+        .commission-card .badge {
+            background: #8b7d6b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .commission-card h4 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+
+        .commission-card .rate {
+            font-size: 28px;
+            font-weight: 700;
+            color: #8b7d6b;
+            margin: 20px 0;
+        }
+
+        .commission-card ul {
+            list-style: none;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .commission-card li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .commission-card li:last-child {
+            border-bottom: none;
+        }
+
+        .commission-card li::before {
+            content: "✓ ";
+            color: #8b7d6b;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .form-container {
+            background: white;
+            padding: 50px 40px;
+            margin: 40px;
+            border-radius: 8px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-container h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .form-container .subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #333;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #8b7d6b;
+            box-shadow: 0 0 0 3px rgba(139, 125, 107, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin-bottom: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        button {
+            background: #1a1a1a;
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            background: #8b7d6b;
+        }
+
+        .security-note {
+            font-size: 12px;
+            color: #999;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .success-message {
+            display: none;
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 20px;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        footer {
+            background: #1a1a1a;
+            color: white;
+            padding: 40px;
+            margin-top: 60px;
+        }
+
+        footer h4 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        footer p,
+        footer a {
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: white;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-section {
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .hero {
+                padding: 40px 20px;
+                margin: 20px;
+            }
+
+            .hero h2 {
+                font-size: 28px;
+            }
+
+            .results-section,
+            .testimonials-section,
+            .commission-section,
+            .form-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+
+            .commission-card.featured {
+                transform: scale(1);
+            }
+
+            .metrics-grid,
+            .testimonials-grid,
+            .commission-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="https://drnashatlatib.com" class="logo">
+            <div class="logo-circle"></div>
+            <div class="brand-text">
+                <h1>dr. nashat latib</h1>
+                <p>women's health reimagined</p>
+            </div>
+        </a>
+        <nav>
+            <a href="https://drnashatlatib.com">Home</a>
+            <a href="https://startreimagined.com/gasp/live">Masterclass</a>
+            <a href="affiliate-application.html">Affiliate Info</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h2>Apply to Join Our Affiliate Program</h2>
+        <p>We partner selectively to protect brand integrity and maximize your ROI. Apply below, tell us about your audience, and we'll review for alignment.</p>
+        <div class="highlight">Approvals within 24–48 hours</div>
+    </section>
+
+    <!-- RESULTS SECTION -->
+    <section class="results-section">
+        <h3>🎯 Last Masterclass Results</h3>
+        <p class="subtitle">Real performance from our October 2025 Get & Stay Pregnant Naturally Masterclass</p>
+        
+        <div class="metrics-grid">
+            <div class="metric">
+                <div class="number">36.49%</div>
+                <div class="label">Registration Rate</div>
+            </div>
+            <div class="metric">
+                <div class="number">28.57%</div>
+                <div class="label">Show-up Rate</div>
+            </div>
+            <div class="metric">
+                <div class="number">13.63%</div>
+                <div class="label">Conversion Rate</div>
+            </div>
+            <div class="metric">
+                <div class="number">2/6</div>
+                <div class="label">Upgrade Rate</div>
+            </div>
+        </div>
+
+        <div class="success-story">
+            <strong>Why This Matters:</strong> A 13.63% conversion rate is one of the strongest we see in any launch. Your audience's buying power is real, and our 10% conversion commission structure rewards that directly.
+        </div>
+
+        <div class="success-story">
+            <strong>Real Example:</strong> One affiliate drove 422 visitors, which converted to 6 sales. Those 6 customers purchased the $997 6-week course, and 2 of them upgraded to the $4,000 12-week program. 
+            <br><br>
+            Under our new commission structure: 6 sales × $300 (avg per conversion) = $1,800+ in affiliate earnings from a single audience segment.
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS SECTION -->
+    <section class="testimonials-section">
+        <h3>✨ Student Success Stories</h3>
+        
+        <div class="testimonials-grid">
+            <div class="testimonial">
+                <div class="testimonial-text">"The masterclass was incredibly valuable. I got pregnant within 3 months of implementing Dr. Latib's strategies."</div>
+                <div class="testimonial-author">— Jessica H., Pregnancy Success</div>
+            </div>
+            <div class="testimonial">
+                <div class="testimonial-text">"Dr. Latib's approach completely changed how I understand fertility. My cycles are more regulated than ever."</div>
+                <div class="testimonial-author">— Rachel E., Cycle Optimization</div>
+            </div>
+            <div class="testimonial">
+                <div class="testimonial-text">"As a healthcare provider, I was impressed by the science-backed strategies. I recommend this to all my patients."</div>
+                <div class="testimonial-author">— Dr. Kelly J., Medical Professional</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- COMMISSION COMPARISON SECTION -->
+    <section class="commission-section">
+        <h3>💰 Commission Structure</h3>
+        <p class="subtitle">Choose the earning model that works best for you</p>
+
+        <div class="commission-cards">
+            <div class="commission-card">
+                <div class="badge">Standard Tier</div>
+                <h4>Per-Lead Model</h4>
+                <div class="rate">$3</div>
+                <p>Per qualified lead</p>
+                <ul>
+                    <li>Simple, straightforward tracking</li>
+                    <li>Payment for registrations only</li>
+                    <li>Good for high-volume referrals</li>
+                    <li>Immediate attribution</li>
+                </ul>
+            </div>
+
+            <div class="commission-card featured">
+                <div class="badge">⭐ Recommended</div>
+                <h4>Conversion Model</h4>
+                <div class="rate">10%</div>
+                <p>Per program purchase + upgrades</p>
+                <ul>
+                    <li><strong>$300+ per conversion</strong> (avg)</li>
+                    <li>Includes 30-day upgrade commissions</li>
+                    <li>Rewards quality referrals</li>
+                    <li>Best for engaged audiences</li>
+                    <li><strong>2x-100x earning potential</strong></li>
+                </ul>
+                <p style="margin-top: 15px; font-size: 13px; color: #666;"><em>October example: 6 sales from one affiliate = $1,800+ in commissions</em></p>
+            </div>
+        </div>
+
+        <div class="success-story">
+            <strong>How It Works:</strong> You choose your preferred model when you apply. If your audience shows strong buying behavior (like they did in October), the 10% conversion model typically generates significantly higher earnings.
+        </div>
+    </section>
+
+    <section class="form-container">
+        <h3>Affiliate Application</h3>
+        <p class="subtitle">Tell us about yourself and your audience</p>
+
+        <div class="success-message" id="successMessage">
+            <h4>Application Submitted Successfully!</h4>
+            <p>Thank you for your interest in our affiliate program. We've received your application and will review it shortly.</p>
+            <p>You'll receive an email confirmation shortly. If approved, you'll get access to your affiliate dashboard and commission tracking.</p>
+            <a href="affiliate-application.html" style="display: inline-block; margin-top: 15px; color: #4caf50; text-decoration: underline;">← Back to Affiliate Info</a>
+        </div>
+
+        <form id="affiliateForm">
+            <div class="form-section">
+                <h4>Personal Information</h4>
+                <label for="firstName">First Name *</label>
+                <input type="text" id="firstName" name="firstName" required>
+
+                <label for="lastName">Last Name *</label>
+                <input type="text" id="lastName" name="lastName" required>
+
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required>
+
+                <label for="company">Company / Brand (optional)</label>
+                <input type="text" id="company" name="company">
+
+                <label for="phone">Phone Number (optional)</label>
+                <input type="tel" id="phone" name="phone">
+            </div>
+
+            <div class="form-section">
+                <h4>Social Media & Platform Information</h4>
+                
+                <label>Primary Platform *</label>
+                <select id="primaryPlatform" name="primaryPlatform" required>
+                    <option value="">Select your main platform</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="pinterest">Pinterest</option>
+                    <option value="blog">Blog/Website</option>
+                    <option value="email">Email List</option>
+                    <option value="clinic">Medical Clinic</option>
+                    <option value="other">Other</option>
+                </select>
+
+                <label for="handle">Your handle/URL (e.g., @username) *</label>
+                <input type="text" id="handle" name="handle" placeholder="Your handle/URL (e.g., @username)" required>
+
+                <label for="followers">Approximate follower count *</label>
+                <input type="number" id="followers" name="followers" placeholder="Approximate follower count" required>
+
+                <label>Additional Platforms</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="instagram" name="additionalPlatforms" value="instagram">
+                        <label for="instagram">Instagram</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="tiktok" name="additionalPlatforms" value="tiktok">
+                        <label for="tiktok">TikTok</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="youtube" name="additionalPlatforms" value="youtube">
+                        <label for="youtube">YouTube</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="pinterest" name="additionalPlatforms" value="pinterest">
+                        <label for="pinterest">Pinterest</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="emailList" name="additionalPlatforms" value="email">
+                        <label for="emailList">Email List</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>Audience Information</h4>
+                
+                <label for="audienceType">Your audience primarily consists of: *</label>
+                <select id="audienceType" name="audienceType" required>
+                    <option value="">Select audience type</option>
+                    <option value="fertility">Women trying to conceive</option>
+                    <option value="pregnancy">Pregnant women</option>
+                    <option value="health">Health & wellness enthusiasts</option>
+                    <option value="medical">Medical professionals</option>
+                    <option value="general">General women's health</option>
+                    <option value="mixed">Mixed audience</option>
+                </select>
+
+                <label for="trackingType">Primary Tracking — Lead or Conversion? *</label>
+                <select id="trackingType" name="trackingType" required>
+                    <option value="">Select one</option>
+                    <option value="lead">Lead ($3 per qualified lead)</option>
+                    <option value="conversion">Conversion (10% per sale + upgrades)</option>
+                </select>
+
+                <label for="engagementRate">Estimated engagement rate: *</label>
+                <select id="engagementRate" name="engagementRate" required>
+                    <option value="">Select engagement rate</option>
+                    <option value="1-2">1-2%</option>
+                    <option value="3-5">3-5%</option>
+                    <option value="6-10">6-10%</option>
+                    <option value="10+">10%+</option>
+                </select>
+
+                <label for="audienceDescription">Describe your audience and why they would be interested in fertility topics *</label>
+                <textarea id="audienceDescription" name="audienceDescription" placeholder="Describe your audience and why they would be interested in fertility topics" required></textarea>
+            </div>
+
+            <div class="form-section">
+                <h4>Experience & Motivation</h4>
+                
+                <label for="experience">Have you promoted affiliate products before? *</label>
+                <select id="experience" name="experience" required>
+                    <option value="">Select experience level</option>
+                    <option value="none">No experience</option>
+                    <option value="beginner">Beginner (1-5 campaigns)</option>
+                    <option value="intermediate">Intermediate (6-20 campaigns)</option>
+                    <option value="advanced">Advanced (20+ campaigns)</option>
+                </select>
+
+                <label for="motivation">Why do you want to promote Dr. Latib's masterclass? *</label>
+                <textarea id="motivation" name="motivation" placeholder="Tell us why you're interested in this partnership" required></textarea>
+
+                <label for="promotionStrategy">How do you plan to promote the masterclass? *</label>
+                <textarea id="promotionStrategy" name="promotionStrategy" placeholder="Describe your promotion strategy" required></textarea>
+            </div>
+
+            <div class="form-section">
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="ethicalAgreement" name="ethicalAgreement" required>
+                        <label for="ethicalAgreement">I agree to promote Dr. Latib's masterclass ethically and in accordance with the affiliate agreement</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="communicationAgreement" name="communicationAgreement" required>
+                        <label for="communicationAgreement">I agree to receive communications about the affiliate program</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit">Submit Application</button>
+            <p class="security-note">🔒 Your information is secure and will only be used for affiliate program purposes</p>
+        </form>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Dr. Nashat Latib</h4>
+                <p>Functional medicine doctor helping women achieve their dream of motherhood through natural fertility strategies and evidence-based protocols.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="https://drnashatlatib.com">Website</a>
+                <a href="https://startreimagined.com/gasp/live">Masterclass</a>
+                <a href="affiliate-application.html">Affiliate Info</a>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p>Email: <a href="mailto:affiliates@drnashatlatib.com">affiliates@drnashatlatib.com</a></p>
+                <p>Website: <a href="https://drnashatlatib.com">www.drnashatlatib.com</a></p>
+            </div>
+        </div>
+        <p style="text-align: center; margin-top: 30px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); color: #999;">© 2025 Dr. Nashat Latib. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('affiliateForm');
+            const submitButton = form.querySelector('button[type="submit"]');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                submitButton.disabled = true;
+                const originalText = submitButton.textContent;
+                submitButton.textContent = 'Submitting...';
+
+                const formData = {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    email: document.getElementById('email').value,
+                    company: document.getElementById('company').value || '',
+                    phone: document.getElementById('phone').value || '',
+                    primaryPlatform: document.getElementById('primaryPlatform').value,
+                    platformHandle: document.getElementById('handle').value,
+                    followerCount: document.getElementById('followers').value,
+                    audienceType: document.getElementById('audienceType').value,
+                    trackingPreference: document.getElementById('trackingType').value,
+                    engagementRate: document.getElementById('engagementRate').value,
+                    experience: document.getElementById('experience').value,
+                    audienceDescription: document.getElementById('audienceDescription').value,
+                    motivation: document.getElementById('motivation').value,
+                    promotionStrategy: document.getElementById('promotionStrategy').value
+                };
+
+                try {
+                    const response = await fetch('/api/submit-affiliate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showSuccessMessage();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        return;
+                    }
+
+                    throw new Error(result.error || 'Submission failed');
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                    alert('There was an error submitting your application. Please try again or contact us directly at affiliates@drnashatlatib.com');
+                }
+            });
+
+            document.querySelectorAll('input[type="email"]').forEach(input => {
+                input.addEventListener('blur', () => {
+                    if (!input.checkValidity()) {
+                        input.style.borderColor = '#e57373';
+                    } else {
+                        input.style.borderColor = '#8b7d6b';
+                    }
+                });
+            });
+        });
+
+        function showSuccessMessage() {
+            const form = document.getElementById('affiliateForm');
+            const successMsg = document.getElementById('successMessage');
+
+            form.style.display = 'none';
+            successMsg.classList.add('show');
+            successMsg.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Application - Dr. Nashat Latib</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8f7f4;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .logo-circle {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #8b7d6b;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .logo-circle::before,
+        .logo-circle::after {
+            content: '';
+            position: absolute;
+            border: 2px solid #8b7d6b;
+            border-radius: 50%;
+        }
+
+        .logo-circle::before {
+            width: 35px;
+            height: 35px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .logo-circle::after {
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-color: #8b7d6b;
+        }
+
+        .brand-text h1 {
+            font-family: "Baskerville", "Libre Baskerville", Georgia, serif;
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            color: #1a1a1a;
+        }
+
+        .brand-text p {
+            font-family: "Baskerville", "Libre Baskerville", Georgia, serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #8b7d6b;
+            margin-top: 2px;
+        }
+
+        nav {
+            display: flex;
+            gap: 40px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #8b7d6b;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #f8f7f4 0%, #efe8e0 100%);
+            padding: 60px 40px;
+            text-align: center;
+            margin: 40px;
+            border-radius: 8px;
+        }
+
+        .hero h2 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: #555;
+            max-width: 600px;
+            margin: 0 auto 20px;
+            line-height: 1.7;
+        }
+
+        .hero .highlight {
+            background: #ffeaa7;
+            padding: 15px 20px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #333;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        /* RESULTS SECTION */
+        .results-section {
+            background: white;
+            padding: 50px 40px;
+            margin: 40px;
+            border-radius: 8px;
+            border-top: 4px solid #8b7d6b;
+        }
+
+        .results-section h3 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .results-section .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 20px;
+            background: #f8f7f4;
+            border-radius: 8px;
+        }
+
+        .metric .number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #8b7d6b;
+            margin-bottom: 10px;
+        }
+
+        .metric .label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .success-story {
+            background: #f0f8ff;
+            border-left: 4px solid #4a90e2;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success-story strong {
+            color: #4a90e2;
+        }
+
+        /* TESTIMONIALS SECTION */
+        .testimonials-section {
+            background: white;
+            padding: 50px 40px;
+            margin: 40px;
+            border-radius: 8px;
+            border-top: 4px solid #8b7d6b;
+        }
+
+        .testimonials-section h3 {
+            font-size: 28px;
+            margin-bottom: 40px;
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .testimonial {
+            background: #f8f7f4;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #e2a76f;
+        }
+
+        .testimonial-text {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 15px;
+            font-style: italic;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 13px;
+        }
+
+        .testimonial-image {
+            width: 100%;
+            height: 200px;
+            background: #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        /* COMMISSION COMPARISON */
+        .commission-section {
+            background: white;
+            padding: 50px 40px;
+            margin: 40px;
+            border-radius: 8px;
+            border-top: 4px solid #8b7d6b;
+        }
+
+        .commission-section h3 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .commission-section .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .commission-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .commission-card {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .commission-card:hover {
+            border-color: #8b7d6b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .commission-card.featured {
+            border-color: #8b7d6b;
+            background: #f8f7f4;
+            position: relative;
+            transform: scale(1.05);
+        }
+
+        .commission-card .badge {
+            background: #8b7d6b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .commission-card h4 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+
+        .commission-card .rate {
+            font-size: 28px;
+            font-weight: 700;
+            color: #8b7d6b;
+            margin: 20px 0;
+        }
+
+        .commission-card ul {
+            list-style: none;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .commission-card li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .commission-card li:last-child {
+            border-bottom: none;
+        }
+
+        .commission-card li::before {
+            content: "✓ ";
+            color: #8b7d6b;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        /* FORM SECTION */
+        .form-container {
+            background: white;
+            padding: 50px 40px;
+            margin: 40px;
+            border-radius: 8px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-container h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .form-container .subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #333;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #8b7d6b;
+            box-shadow: 0 0 0 3px rgba(139, 125, 107, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin-bottom: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        button {
+            background: #1a1a1a;
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            background: #8b7d6b;
+        }
+
+        .security-note {
+            font-size: 12px;
+            color: #999;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .success-message {
+            display: none;
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 20px;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        footer {
+            background: #1a1a1a;
+            color: white;
+            padding: 40px;
+            margin-top: 60px;
+        }
+
+        footer h4 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        footer p,
+        footer a {
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: white;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-section {
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .hero {
+                padding: 40px 20px;
+                margin: 20px;
+            }
+
+            .hero h2 {
+                font-size: 28px;
+            }
+
+            .results-section,
+            .testimonials-section,
+            .commission-section,
+            .form-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+
+            .commission-card.featured {
+                transform: scale(1);
+            }
+
+            .metrics-grid,
+            .testimonials-grid,
+            .commission-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="https://drnashatlatib.com" class="logo">
+            <div class="logo-circle"></div>
+            <div class="brand-text">
+                <h1>dr. nashat latib</h1>
+                <p>women's health reimagined</p>
+            </div>
+        </a>
+        <nav>
+            <a href="https://drnashatlatib.com">Home</a>
+            <a href="https://startreimagined.com/gasp/live">Masterclass</a>
+            <a href="affiliate-application.html">Affiliate Info</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h2>Apply to Join Our Affiliate Program</h2>
+        <p>We partner selectively to protect brand integrity and maximize your ROI. Apply below, tell us about your audience, and we'll review for alignment.</p>
+        <div class="highlight">Approvals within 24–48 hours</div>
+    </section>
+
+    <!-- RESULTS SECTION -->
+    <section class="results-section">
+        <h3>🎯 Last Masterclass Results</h3>
+        <p class="subtitle">Real performance from our October 2025 Get & Stay Pregnant Naturally Masterclass</p>
+        
+        <div class="metrics-grid">
+            <div class="metric">
+                <div class="number">36.49%</div>
+                <div class="label">Registration Rate</div>
+            </div>
+            <div class="metric">
+                <div class="number">28.57%</div>
+                <div class="label">Show-up Rate</div>
+            </div>
+            <div class="metric">
+                <div class="number">13.63%</div>
+                <div class="label">Conversion Rate</div>
+            </div>
+            <div class="metric">
+                <div class="number">2/6</div>
+                <div class="label">Upgrade Rate</div>
+            </div>
+        </div>
+
+        <div class="success-story">
+            <strong>Why This Matters:</strong> A 13.63% conversion rate is one of the strongest we see in any launch. Your audience's buying power is real, and our 10% conversion commission structure rewards that directly.
+        </div>
+
+        <div class="success-story">
+            <strong>Real Example:</strong> One affiliate drove 422 visitors, which converted to 6 sales. Those 6 customers purchased the $997 6-week course, and 2 of them upgraded to the $4,000 12-week program. 
+            <br><br>
+            Under our new commission structure: 6 sales × $300 (avg per conversion) = $1,800+ in affiliate earnings from a single audience segment.
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS SECTION -->
+    <section class="testimonials-section">
+        <h3>✨ Student Success Stories</h3>
+        
+        <div class="testimonials-grid">
+            <div class="testimonial">
+                <div class="testimonial-text">"The masterclass was incredibly valuable. I got pregnant within 3 months of implementing Dr. Latib's strategies."</div>
+                <div class="testimonial-author">— Jessica H., Pregnancy Success</div>
+            </div>
+            <div class="testimonial">
+                <div class="testimonial-text">"Dr. Latib's approach completely changed how I understand fertility. My cycles are more regulated than ever."</div>
+                <div class="testimonial-author">— Rachel E., Cycle Optimization</div>
+            </div>
+            <div class="testimonial">
+                <div class="testimonial-text">"As a healthcare provider, I was impressed by the science-backed strategies. I recommend this to all my patients."</div>
+                <div class="testimonial-author">— Dr. Kelly J., Medical Professional</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- COMMISSION COMPARISON SECTION -->
+    <section class="commission-section">
+        <h3>💰 Commission Structure</h3>
+        <p class="subtitle">Choose the earning model that works best for you</p>
+
+        <div class="commission-cards">
+            <div class="commission-card">
+                <div class="badge">Standard Tier</div>
+                <h4>Per-Lead Model</h4>
+                <div class="rate">$3</div>
+                <p>Per qualified lead</p>
+                <ul>
+                    <li>Simple, straightforward tracking</li>
+                    <li>Payment for registrations only</li>
+                    <li>Good for high-volume referrals</li>
+                    <li>Immediate attribution</li>
+                </ul>
+            </div>
+
+            <div class="commission-card featured">
+                <div class="badge">⭐ Recommended</div>
+                <h4>Conversion Model</h4>
+                <div class="rate">10%</div>
+                <p>Per program purchase + upgrades</p>
+                <ul>
+                    <li><strong>$300+ per conversion</strong> (avg)</li>
+                    <li>Includes 30-day upgrade commissions</li>
+                    <li>Rewards quality referrals</li>
+                    <li>Best for engaged audiences</li>
+                    <li><strong>2x-100x earning potential</strong></li>
+                </ul>
+                <p style="margin-top: 15px; font-size: 13px; color: #666;"><em>October example: 6 sales from one affiliate = $1,800+ in commissions</em></p>
+            </div>
+        </div>
+
+        <div class="success-story">
+            <strong>How It Works:</strong> You choose your preferred model when you apply. If your audience shows strong buying behavior (like they did in October), the 10% conversion model typically generates significantly higher earnings.
+        </div>
+    </section>
+
+    <section class="form-container">
+        <h3>Affiliate Application</h3>
+        <p class="subtitle">Tell us about yourself and your audience</p>
+
+        <div class="success-message" id="successMessage">
+            <h4>Application Submitted Successfully!</h4>
+            <p>Thank you for your interest in our affiliate program. We've received your application and will review it shortly.</p>
+            <p>You'll receive an email confirmation shortly. If approved, you'll get access to your affiliate dashboard and commission tracking.</p>
+            <a href="affiliate-application.html" style="display: inline-block; margin-top: 15px; color: #4caf50; text-decoration: underline;">← Back to Affiliate Info</a>
+        </div>
+
+        <form id="affiliateForm">
+            <div class="form-section">
+                <h4>Personal Information</h4>
+                <label for="firstName">First Name *</label>
+                <input type="text" id="firstName" name="firstName" required>
+
+                <label for="lastName">Last Name *</label>
+                <input type="text" id="lastName" name="lastName" required>
+
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required>
+
+                <label for="company">Company / Brand (optional)</label>
+                <input type="text" id="company" name="company">
+
+                <label for="phone">Phone Number (optional)</label>
+                <input type="tel" id="phone" name="phone">
+            </div>
+
+            <div class="form-section">
+                <h4>Social Media & Platform Information</h4>
+                
+                <label>Primary Platform *</label>
+                <select id="primaryPlatform" name="primaryPlatform" required>
+                    <option value="">Select your main platform</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="pinterest">Pinterest</option>
+                    <option value="blog">Blog/Website</option>
+                    <option value="email">Email List</option>
+                    <option value="clinic">Medical Clinic</option>
+                    <option value="other">Other</option>
+                </select>
+
+                <label for="handle">Your handle/URL (e.g., @username) *</label>
+                <input type="text" id="handle" name="handle" placeholder="Your handle/URL (e.g., @username)" required>
+
+                <label for="followers">Approximate follower count *</label>
+                <input type="number" id="followers" name="followers" placeholder="Approximate follower count" required>
+
+                <label>Additional Platforms</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="instagram" name="additionalPlatforms" value="instagram">
+                        <label for="instagram">Instagram</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="tiktok" name="additionalPlatforms" value="tiktok">
+                        <label for="tiktok">TikTok</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="youtube" name="additionalPlatforms" value="youtube">
+                        <label for="youtube">YouTube</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="pinterest" name="additionalPlatforms" value="pinterest">
+                        <label for="pinterest">Pinterest</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="emailList" name="additionalPlatforms" value="email">
+                        <label for="emailList">Email List</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>Audience Information</h4>
+                
+                <label for="audienceType">Your audience primarily consists of: *</label>
+                <select id="audienceType" name="audienceType" required>
+                    <option value="">Select audience type</option>
+                    <option value="fertility">Women trying to conceive</option>
+                    <option value="pregnancy">Pregnant women</option>
+                    <option value="health">Health & wellness enthusiasts</option>
+                    <option value="medical">Medical professionals</option>
+                    <option value="general">General women's health</option>
+                    <option value="mixed">Mixed audience</option>
+                </select>
+
+                <label for="trackingType">Primary Tracking — Lead or Conversion? *</label>
+                <select id="trackingType" name="trackingType" required>
+                    <option value="">Select one</option>
+                    <option value="lead">Lead ($3 per qualified lead)</option>
+                    <option value="conversion">Conversion (10% per sale + upgrades)</option>
+                </select>
+
+                <label for="engagementRate">Estimated engagement rate: *</label>
+                <select id="engagementRate" name="engagementRate" required>
+                    <option value="">Select engagement rate</option>
+                    <option value="1-2">1-2%</option>
+                    <option value="3-5">3-5%</option>
+                    <option value="6-10">6-10%</option>
+                    <option value="10+">10%+</option>
+                </select>
+
+                <label for="audienceDescription">Describe your audience and why they would be interested in fertility topics *</label>
+                <textarea id="audienceDescription" name="audienceDescription" placeholder="Describe your audience and why they would be interested in fertility topics" required></textarea>
+            </div>
+
+            <div class="form-section">
+                <h4>Experience & Motivation</h4>
+                
+                <label for="experience">Have you promoted affiliate products before? *</label>
+                <select id="experience" name="experience" required>
+                    <option value="">Select experience level</option>
+                    <option value="none">No experience</option>
+                    <option value="beginner">Beginner (1-5 campaigns)</option>
+                    <option value="intermediate">Intermediate (6-20 campaigns)</option>
+                    <option value="advanced">Advanced (20+ campaigns)</option>
+                </select>
+
+                <label for="motivation">Why do you want to promote Dr. Latib's masterclass? *</label>
+                <textarea id="motivation" name="motivation" placeholder="Tell us why you're interested in this partnership" required></textarea>
+
+                <label for="promotionStrategy">How do you plan to promote the masterclass? *</label>
+                <textarea id="promotionStrategy" name="promotionStrategy" placeholder="Describe your promotion strategy" required></textarea>
+            </div>
+
+            <div class="form-section">
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="ethicalAgreement" name="ethicalAgreement" required>
+                        <label for="ethicalAgreement">I agree to promote Dr. Latib's masterclass ethically and in accordance with the affiliate agreement</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="communicationAgreement" name="communicationAgreement" required>
+                        <label for="communicationAgreement">I agree to receive communications about the affiliate program</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit">Submit Application</button>
+            <p class="security-note">🔒 Your information is secure and will only be used for affiliate program purposes</p>
+        </form>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Dr. Nashat Latib</h4>
+                <p>Functional medicine doctor helping women achieve their dream of motherhood through natural fertility strategies and evidence-based protocols.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="https://drnashatlatib.com">Website</a>
+                <a href="https://startreimagined.com/gasp/live">Masterclass</a>
+                <a href="affiliate-application.html">Affiliate Info</a>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p>Email: <a href="mailto:affiliates@drnashatlatib.com">affiliates@drnashatlatib.com</a></p>
+                <p>Website: <a href="https://drnashatlatib.com">www.drnashatlatib.com</a></p>
+            </div>
+        </div>
+        <p style="text-align: center; margin-top: 30px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); color: #999;">© 2025 Dr. Nashat Latib. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('affiliateForm');
+            const submitButton = form.querySelector('button[type="submit"]');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Show loading state
+                submitButton.disabled = true;
+                const originalText = submitButton.textContent;
+                submitButton.textContent = 'Submitting...';
+
+                const formData = {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    email: document.getElementById('email').value,
+                    company: document.getElementById('company').value || '',
+                    phone: document.getElementById('phone').value || '',
+                    primaryPlatform: document.getElementById('primaryPlatform').value,
+                    platformHandle: document.getElementById('handle').value,
+                    followerCount: document.getElementById('followers').value,
+                    audienceType: document.getElementById('audienceType').value,
+                    trackingPreference: document.getElementById('trackingType').value,
+                    engagementRate: document.getElementById('engagementRate').value,
+                    experience: document.getElementById('experience').value,
+                    audienceDescription: document.getElementById('audienceDescription').value,
+                    motivation: document.getElementById('motivation').value,
+                    promotionStrategy: document.getElementById('promotionStrategy').value
+                };
+
+                try {
+                    const response = await fetch('/api/submit-affiliate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showSuccessMessage();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        return;
+                    }
+
+                    throw new Error(result.error || 'Submission failed');
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                    alert('There was an error submitting your application. Please try again or contact us directly at affiliates@drnashatlatib.com');
+                }
+            });
+
+            document.querySelectorAll('input[type="email"]').forEach(input => {
+                input.addEventListener('blur', () => {
+                    if (!input.checkValidity()) {
+                        input.style.borderColor = '#e57373';
+                    } else {
+                        input.style.borderColor = '#8b7d6b';
+                    }
+                });
+            });
+        });
+
+        function showSuccessMessage() {
+            const form = document.getElementById('affiliateForm');
+            const successMsg = document.getElementById('successMessage');
+
+            form.style.display = 'none';
+            successMsg.classList.add('show');
+            successMsg.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
+
