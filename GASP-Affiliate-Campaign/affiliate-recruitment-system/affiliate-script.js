@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Submission error:', error);
             setLoadingState(false);
-            alert('There was an error submitting your application. Please try again or contact us at affiliates@drnashatlatib.com.');
+            alert('There was an error submitting your application. Please try again or contact us at partners@startreimagined.com.');
         }
     });
 
