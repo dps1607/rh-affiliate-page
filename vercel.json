@@ -1,4 +1,0 @@
-{
-    "buildCommand": "cd GASP-Affiliate-Campaign/affiliate-recruitment-system && npm run build",
-    "outputDirectory": "GASP-Affiliate-Campaign/affiliate-recruitment-system/dist"
-}
